@@ -24,7 +24,7 @@ public class Transaction implements Serializable {
 	private LocalDate date;
 	
 	@OneToOne
-	private Member member;
+	protected Member member;
 	
 	@OneToOne
 	private Category category;
@@ -33,12 +33,13 @@ public class Transaction implements Serializable {
 		
 	}
 	
-	public Transaction(Long id, Double amount, String description, LocalDate date, Category category) {
+	public Transaction(Long id, Double amount, String description, LocalDate date, Category category, Member member) {
 		this.id = id;
 		this.amount = amount;
 		this.description = description;
 		this.date = date;
 		this.category = category;
+		this.member = member;
 	}
 
 	public Long getId() {
@@ -84,6 +85,14 @@ public class Transaction implements Serializable {
 	@Override
 	public int hashCode() {
 		return Objects.hash(id);
+	}
+
+	public Member getMember() {
+		return member;
+	}
+
+	public void setMember(Member member) {
+		this.member = member;
 	}
 
 	@Override

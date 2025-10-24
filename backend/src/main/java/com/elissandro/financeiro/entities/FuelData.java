@@ -1,6 +1,7 @@
 package com.elissandro.financeiro.entities;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 
 import jakarta.persistence.Entity;
 
@@ -16,9 +17,9 @@ public class FuelData extends Transaction implements Serializable {
 		super();
 	}
 
-	public FuelData(Long id, Double amount, String description, java.time.LocalDate date, String fuelType,
+	public FuelData(Long id, Double amount, String description, LocalDate date, String fuelType,
 			Double liters, Double kilometers, Double consumption) {
-		super(id, amount, description, date, null);
+		super(id, amount, description, date, null, null);
 		this.liters = liters;
 		this.kilometers = kilometers;
 		this.consumption = consumption;
