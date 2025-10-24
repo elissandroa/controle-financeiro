@@ -1,5 +1,6 @@
 package com.elissandro.financeiro.entities;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.Objects;
 
@@ -12,7 +13,8 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "transactions")
-public class Transaction {
+public class Transaction implements Serializable {
+	private static final long serialVersionUID = 1L;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

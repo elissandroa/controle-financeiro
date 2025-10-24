@@ -1,6 +1,5 @@
 package com.elissandro.financeiro.entities;
 
-import java.io.Serializable;
 import java.util.Objects;
 
 import jakarta.persistence.Entity;
@@ -10,37 +9,36 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "categories")
-public class Category implements Serializable {
-	private static final long serialVersionUID = 1L;
-	
-	@Id	
+@Table(name = "roles")
+public class Role {
+
+	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
-	private String name;
+	private long id;
+	private String authority;
 	
-	public Category() {
+	public Role() {
 	}
 	
-	public Category(Long id, String name) {
+	public Role(long id, String authority) {
 		this.id = id;
-		this.name = name;
+		this.authority = authority;
 	}
 
-	public Long getId() {
+	public long getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(long id) {
 		this.id = id;
 	}
 
-	public String getName() {
-		return name;
+	public String getAuthority() {
+		return authority;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setAuthority(String authority) {
+		this.authority = authority;
 	}
 
 	@Override
@@ -56,8 +54,7 @@ public class Category implements Serializable {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Category other = (Category) obj;
-		return Objects.equals(id, other.id);
+		Role other = (Role) obj;
+		return id == other.id;
 	}
-
 }

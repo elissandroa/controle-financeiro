@@ -1,9 +1,12 @@
 package com.elissandro.financeiro.entities;
 
+import java.io.Serializable;
+
 import jakarta.persistence.Entity;
 
 @Entity
-public class FuelData extends Transaction {
+public class FuelData extends Transaction implements Serializable {
+	private static final long serialVersionUID = 1L;
 	
 	private Double liters;
 	private Double kilometers;
