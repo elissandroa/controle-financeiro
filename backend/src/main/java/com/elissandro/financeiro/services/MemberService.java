@@ -1,4 +1,4 @@
-package com.elissandro.financeiro.categories;
+package com.elissandro.financeiro.services;
 
 import java.time.LocalDate;
 import java.util.List;

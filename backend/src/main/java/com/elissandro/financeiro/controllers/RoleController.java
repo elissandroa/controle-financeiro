@@ -12,33 +12,38 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.elissandro.financeiro.dto.CategoryDTO;
-import com.elissandro.financeiro.services.CategoryService;
+import com.elissandro.financeiro.dto.RoleDTO;
+import com.elissandro.financeiro.services.RoleService;
 
 @RestController
-@RequestMapping("/categories")
-public class CategoryController {
-	
+@RequestMapping("/roles")
+public class RoleController {
+
 	@Autowired
-	private CategoryService service;
+	private RoleService service;
 	
 	@GetMapping
-	public List<CategoryDTO> findAll() {
+	public List<RoleDTO> findAll() {
 		return service.findAll();
 	}
 	
+	@GetMapping("/{id}")
+	public RoleDTO findById(@PathVariable Long id) {
+		return service.findById(id);
+	}
+	
 	@PostMapping
-	public CategoryDTO createCategory(@RequestBody CategoryDTO categoryDTO) {
-		return service.save(categoryDTO);
+	public RoleDTO insert(@RequestBody RoleDTO dto) {
+		return service.insert(dto);
 	}
 	
 	@PutMapping("/{id}")
-	public CategoryDTO updateCategory(@PathVariable Long id, @RequestBody CategoryDTO categoryDTO) {
-		return service.update(id, categoryDTO);
+	public RoleDTO update(@PathVariable Long id, @RequestBody RoleDTO dto) {
+		return service.update(id, dto);
 	}
 	
 	@DeleteMapping("/{id}")
-	public void deleteCategory(@PathVariable Long id) {
+	public void delete(@PathVariable Long id) {
 		service.delete(id);
 	}
 }

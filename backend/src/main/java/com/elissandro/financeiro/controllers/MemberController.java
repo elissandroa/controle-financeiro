@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.elissandro.financeiro.categories.MemberService;
 import com.elissandro.financeiro.dto.MemberDTO;
+import com.elissandro.financeiro.services.MemberService;
 
 @RestController
 @RequestMapping("/members")
