@@ -28,6 +28,8 @@ public class MemberService {
 		newMember.setName(member.getName());
 		newMember.setRole(member.getRole());
 		newMember.setCreatedAt(member.getCreatedAt() != null ? member.getCreatedAt() : LocalDate.now());
+		newMember.getTransactions().clear();
+		newMember.getTransactions().addAll(member.getTransactions());
 		newMember = repository.save(newMember);
 		return new MemberDTO(newMember);
 	}

@@ -69,6 +69,10 @@ public class Member implements Serializable {
 		this.createdAt = createdAt;
 	}
 
+	public List<Transaction> getTransactions() {
+		return transactions;
+	}
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(id);

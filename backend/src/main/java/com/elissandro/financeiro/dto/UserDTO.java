@@ -1,6 +1,8 @@
 package com.elissandro.financeiro.dto;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.elissandro.financeiro.entities.User;
 
@@ -11,6 +13,7 @@ public class UserDTO implements Serializable {
 	private String firstName;
 	private String lastName;
 	private String email;
+	private List<RoleDTO> roles = new ArrayList<>();
 	
 	public UserDTO() {
 	}
@@ -27,6 +30,7 @@ public class UserDTO implements Serializable {
 		this.firstName = entity.getFirstName();
 		this.lastName = entity.getLastName();
 		this.email = entity.getEmail();
+		this.roles = entity.getRoles().stream().map(role -> new RoleDTO(role)).toList();
 	}
 
 	public Long getId() {
@@ -59,6 +63,10 @@ public class UserDTO implements Serializable {
 
 	public void setEmail(String email) {
 		this.email = email;
+	}
+
+	public List<RoleDTO> getRoles() {
+		return roles;
 	}
 
 }

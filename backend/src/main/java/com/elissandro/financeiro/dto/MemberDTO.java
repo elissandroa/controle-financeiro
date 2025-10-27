@@ -2,8 +2,11 @@ package com.elissandro.financeiro.dto;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.elissandro.financeiro.entities.Member;
+import com.elissandro.financeiro.entities.Transaction;
 
 public class MemberDTO implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -12,6 +15,8 @@ public class MemberDTO implements Serializable {
 	private String name;
 	private String role;
 	private LocalDate createdAt;
+	
+	private List<Transaction> transactions = new ArrayList<>();
 	
 	public MemberDTO() {
 	}
@@ -28,6 +33,7 @@ public class MemberDTO implements Serializable {
 		this.name = entity.getName();
 		this.role = entity.getRole();
 		this.createdAt = entity.getCreatedAt();
+		this.transactions = entity.getTransactions();
 	}
 
 	public Long getId() {
@@ -60,5 +66,9 @@ public class MemberDTO implements Serializable {
 
 	public void setCreatedAt(LocalDate createdAt) {
 		this.createdAt = createdAt;
+	}
+
+	public List<Transaction> getTransactions() {
+		return transactions;
 	}
 }
