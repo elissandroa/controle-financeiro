@@ -11,6 +11,8 @@ import com.elissandro.financeiro.dto.UserDTO;
 import com.elissandro.financeiro.entities.Role;
 import com.elissandro.financeiro.entities.User;
 import com.elissandro.financeiro.repositories.UserRepository;
+import com.elissandro.financeiro.services.exceptions.DatabaseException;
+import com.elissandro.financeiro.services.exceptions.ResourceNotFoundException;
 
 @Service
 public class UserService {
@@ -26,7 +28,7 @@ public class UserService {
 
 	@Transactional(readOnly = true)
 	public UserDTO findById(Long id) {
-		User user = repository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+		User user = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 		return new UserDTO(user);
 	}
 
@@ -46,7 +48,7 @@ public class UserService {
 	
 	@Transactional
 	public UserDTO update(Long id, UserDTO dto) {
-		User user = repository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+		User user = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 		user.setFirstName(dto.getFirstName());
 		user.setLastName(dto.getLastName());
 		user.setEmail(dto.getEmail());
@@ -60,8 +62,12 @@ public class UserService {
 	
 	public void delete(Long id) {
 		if (!repository.existsById(id)) {
-			throw new RuntimeException("User not found");
+			throw new ResourceNotFoundException("User not found");
 		}
-		repository.deleteById(id);
+		try {
+			repository.deleteById(id);
+		} catch (Exception e) {
+			throw new DatabaseException("Could not delete user: " + e.getMessage());
+		}
 	}
 }
