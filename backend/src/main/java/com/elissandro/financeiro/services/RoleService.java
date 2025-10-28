@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.elissandro.financeiro.dto.RoleDTO;
 import com.elissandro.financeiro.entities.Role;
 import com.elissandro.financeiro.repositories.RoleRepository;
+import com.elissandro.financeiro.services.exceptions.DatabaseException;
+import com.elissandro.financeiro.services.exceptions.ResourceNotFoundException;
 
 @Service
 public class RoleService {
@@ -25,7 +27,7 @@ public class RoleService {
 	
 	@Transactional(readOnly = true)
 	public RoleDTO findById(Long id) {
-		Role role = repository.findById(id).orElseThrow(() -> new RuntimeException("Role not found"));
+		Role role = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Role not found"));
 		return new RoleDTO(role);
 	}
 	
@@ -37,7 +39,7 @@ public class RoleService {
 	}
 	
 	public RoleDTO update(Long id, RoleDTO dto) {
-		Role role = repository.findById(id).orElseThrow(() -> new RuntimeException("Role not found"));
+		Role role = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Role not found"));
 		role.setAuthority(dto.getAuthority());
 		role = repository.save(role);
 		return new RoleDTO(role);
@@ -45,9 +47,13 @@ public class RoleService {
 	
 	public void delete(Long id) {
 		if (!repository.existsById(id)) {
-			throw new RuntimeException("Role not found");
+			throw new ResourceNotFoundException("Role not found");
 		}
-		repository.deleteById(id);
+		try {
+			repository.deleteById(id);
+		} catch (Exception e) {
+			throw new DatabaseException("Could not delete role with id " + id);
+		}
 	}
 
 }
