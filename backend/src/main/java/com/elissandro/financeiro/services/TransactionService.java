@@ -13,6 +13,8 @@ import com.elissandro.financeiro.entities.Category;
 import com.elissandro.financeiro.entities.Member;
 import com.elissandro.financeiro.entities.Transaction;
 import com.elissandro.financeiro.repositories.TransactionRepository;
+import com.elissandro.financeiro.services.exceptions.DatabaseException;
+import com.elissandro.financeiro.services.exceptions.ResourceNotFoundException;
 
 @Service
 public class TransactionService {
@@ -31,7 +33,7 @@ public class TransactionService {
 	public TransactionDTO findById(Long id) {
 		Optional<Transaction> optionalTransaction = repository.findById(id);
 		if (optionalTransaction.isEmpty()) {
-			throw new RuntimeException("Transaction not found");
+			throw new ResourceNotFoundException("Transaction not found");
 		}
 		return new TransactionDTO(optionalTransaction.get());
 	}
@@ -53,7 +55,7 @@ public class TransactionService {
 	
 	@Transactional
 	public TransactionDTO update(Long id, TransactionDTO dto) {
-		Transaction transaction = repository.findById(id).orElseThrow(() -> new RuntimeException("Transaction not found"));
+		Transaction transaction = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
 		transaction.setAmount(dto.getAmount());
 		transaction.setDate(dto.getDate());
 		transaction.setTransactionType(dto.getTransactionType());
@@ -68,8 +70,12 @@ public class TransactionService {
 	
 	public void delete(Long id) {
 		if (!repository.existsById(id)) {
-			throw new RuntimeException("Transaction not found");
+			throw new ResourceNotFoundException("Transaction not found");
 		}
-		repository.deleteById(id);
+		try {
+			repository.deleteById(id);
+		} catch (Exception e) {
+			throw new DatabaseException("Could not delete transaction: " + e.getMessage());
+		}
 	}
 }
