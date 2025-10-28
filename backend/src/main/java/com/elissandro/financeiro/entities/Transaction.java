@@ -8,7 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -22,24 +22,26 @@ public class Transaction implements Serializable {
 	private Double amount;
 	private String description;
 	private LocalDate date;
+	private TransactionType transactionType;
 	
-	@OneToOne
+	@ManyToOne
 	protected Member member;
 	
-	@OneToOne
+	@ManyToOne
 	private Category category;
 	
 	public Transaction() {
 		
 	}
 	
-	public Transaction(Long id, Double amount, String description, LocalDate date, Category category, Member member) {
+	public Transaction(Long id, Double amount, String description, LocalDate date, Category category, Member member, TransactionType transactionType) {
 		this.id = id;
 		this.amount = amount;
 		this.description = description;
 		this.date = date;
 		this.category = category;
 		this.member = member;
+		this.transactionType = transactionType;
 	}
 
 	public Long getId() {
@@ -93,6 +95,14 @@ public class Transaction implements Serializable {
 
 	public void setMember(Member member) {
 		this.member = member;
+	}
+
+	public TransactionType getTransactionType() {
+		return transactionType;
+	}
+
+	public void setTransactionType(TransactionType transactionType) {
+		this.transactionType = transactionType;
 	}
 
 	@Override

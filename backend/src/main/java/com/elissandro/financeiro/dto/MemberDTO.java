@@ -33,7 +33,6 @@ public class MemberDTO implements Serializable {
 		this.name = entity.getName();
 		this.role = entity.getRole();
 		this.createdAt = entity.getCreatedAt();
-		this.transactions = entity.getTransactions();
 	}
 
 	public Long getId() {
