@@ -1,8 +1,8 @@
 package com.elissandro.financeiro.controllers;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,12 +23,12 @@ public class TransactionController {
 	private TransactionService service;
 		
 	@GetMapping
-	public List<TransactionDTO> findAll() {
-		return service.findAll();
+	public Page<TransactionDTO> findAll(Pageable pageable) {
+		return service.findAll(pageable);
 	}
 	
 	@GetMapping("/{id}")
-	public List<TransactionDTO> findById(@PathVariable Long id) {
+	public TransactionDTO findById(@PathVariable Long id) {
 		return service.findById(id);
 	}
 	

@@ -1,10 +1,10 @@
 package com.elissandro.financeiro.services;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,18 +22,18 @@ public class TransactionService {
 	
 	
 	@Transactional(readOnly = true)
-	public List<TransactionDTO> findAll() {
-		List<Transaction> transactions = repository.findAll();
-		return transactions.stream().map(transaction -> new TransactionDTO(transaction)).collect(Collectors.toList());
+	public Page<TransactionDTO> findAll(Pageable pageable) {
+		Page<Transaction> transactions = repository.findAll(pageable);
+		return transactions.map(transaction -> new TransactionDTO(transaction));
 	}
 	
 	@Transactional(readOnly = true)
-	public List<TransactionDTO> findById(Long id) {
+	public TransactionDTO findById(Long id) {
 		Optional<Transaction> optionalTransaction = repository.findById(id);
 		if (optionalTransaction.isEmpty()) {
 			throw new RuntimeException("Transaction not found");
 		}
-		return optionalTransaction.stream().map(transaction -> new TransactionDTO(transaction)).collect(Collectors.toList());
+		return new TransactionDTO(optionalTransaction.get());
 	}
 	
 	@Transactional
