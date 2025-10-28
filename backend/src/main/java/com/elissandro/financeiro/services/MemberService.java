@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.elissandro.financeiro.dto.MemberDTO;
 import com.elissandro.financeiro.entities.Member;
 import com.elissandro.financeiro.repositories.MemberRepository;
+import com.elissandro.financeiro.services.exceptions.DatabaseException;
+import com.elissandro.financeiro.services.exceptions.ResourceNotFoundException;
 
 @Service
 public class MemberService {
@@ -34,7 +36,7 @@ public class MemberService {
 
 	
 	public MemberDTO update(Long id, MemberDTO memberDetails) {
-		Member member = repository.findById(id).orElseThrow(() -> new RuntimeException("Member not found"));
+		Member member = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Member not found"));
 
 		member.setName(memberDetails.getName());
 		member.setRole(memberDetails.getRole());
@@ -44,8 +46,12 @@ public class MemberService {
 
 	public void delete(Long id) {
 		if (!repository.existsById(id)) {
-			throw new RuntimeException("Member not found");
+			throw new ResourceNotFoundException("Member not found");
 		}
-		repository.deleteById(id);
+		try {
+			repository.deleteById(id);
+		} catch (Exception e) {
+			throw new DatabaseException("Could not delete member with id " + id);
+		}
 	}
 }
