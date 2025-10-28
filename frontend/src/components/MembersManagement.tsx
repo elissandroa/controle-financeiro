@@ -18,28 +18,37 @@ export default function MembersManagement() {
     loadMembers();
   }, []);
 
-  const loadMembers = () => {
-    setMembers(getMembers());
+  const loadMembers = async () => {
+    try {
+      const data = await getMembers();
+      setMembers(data);
+    } catch (error) {
+      toast.error('Erro ao carregar membros');
+    }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.name || !formData.role) {
       toast.error('Preencha todos os campos');
       return;
     }
 
-    if (editingMember) {
-      updateMember(editingMember.id, formData);
-      toast.success('Membro atualizado com sucesso!');
-    } else {
-      saveMember(formData);
-      toast.success('Membro adicionado com sucesso!');
-    }
+    try {
+      if (editingMember) {
+        await updateMember(editingMember.id, formData);
+        toast.success('Membro atualizado com sucesso!');
+      } else {
+        await saveMember(formData);
+        toast.success('Membro adicionado com sucesso!');
+      }
 
-    loadMembers();
-    setIsDialogOpen(false);
-    setFormData({ name: '', role: '' });
-    setEditingMember(null);
+      await loadMembers();
+      setIsDialogOpen(false);
+      setFormData({ name: '', role: '' });
+      setEditingMember(null);
+    } catch (error) {
+      toast.error('Erro ao salvar membro');
+    }
   };
 
   const handleEdit = (member: Member) => {
@@ -48,11 +57,15 @@ export default function MembersManagement() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Tem certeza que deseja excluir este membro?')) {
-      deleteMember(id);
-      toast.success('Membro excluído com sucesso!');
-      loadMembers();
+      try {
+        await deleteMember(id);
+        toast.success('Membro excluído com sucesso!');
+        await loadMembers();
+      } catch (error) {
+        toast.error('Erro ao excluir membro');
+      }
     }
   };
 

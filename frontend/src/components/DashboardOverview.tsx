@@ -15,9 +15,17 @@ export default function DashboardOverview({ hideValues }: DashboardOverviewProps
     loadData();
   }, []);
 
-  const loadData = () => {
-    setTransactions(getTransactions());
-    setMembers(getMembers());
+  const loadData = async () => {
+    try {
+      const [transactionsData, membersData] = await Promise.all([
+        getTransactions(),
+        getMembers()
+      ]);
+      setTransactions(transactionsData);
+      setMembers(membersData);
+    } catch (error) {
+      console.error('Erro ao carregar dados:', error);
+    }
   };
 
   const currentMonth = new Date().getMonth();

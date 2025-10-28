@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from './ui/pagination';
-import { Plus, Trash2, TrendingUp, TrendingDown, Fuel, Calendar, Filter } from 'lucide-react';
+import { Plus, Trash2, TrendingUp, TrendingDown, Calendar, Filter } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import {
   Transaction,
@@ -19,13 +19,11 @@ import {
   EXPENSE_CATEGORIES,
   INCOME_CATEGORIES,
 } from './data-service';
-import QuickFuelEntry from './QuickFuelEntry';
 
 export default function TransactionsView() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isFuelDialogOpen, setIsFuelDialogOpen] = useState(false);
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
   const [currentPage, setCurrentPage] = useState(1);
   const [filterMemberId, setFilterMemberId] = useState<string>('all');
@@ -37,21 +35,27 @@ export default function TransactionsView() {
     description: '',
     date: new Date().toISOString().split('T')[0],
     memberId: '',
-    liters: '',
-    kilometers: '',
   });
 
   useEffect(() => {
     loadData();
   }, []);
 
-  const loadData = () => {
-    setTransactions(getTransactions());
-    setMembers(getMembers());
-    setCurrentPage(1);
+  const loadData = async () => {
+    try {
+      const [transactionsData, membersData] = await Promise.all([
+        getTransactions(),
+        getMembers()
+      ]);
+      setTransactions(transactionsData);
+      setMembers(membersData);
+      setCurrentPage(1);
+    } catch (error) {
+      toast.error('Erro ao carregar dados');
+    }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.amount || !formData.category || !formData.description || !formData.memberId) {
       toast.error('Preencha todos os campos obrigatórios');
       return;
@@ -72,31 +76,17 @@ export default function TransactionsView() {
       memberId: formData.memberId,
     };
 
-    // Add fuel data if it's a fuel expense
-    if (formData.category === 'Abastecimento') {
-      const liters = parseFloat(formData.liters);
-      const kilometers = parseFloat(formData.kilometers);
-
-      if (!liters || !kilometers || liters <= 0 || kilometers <= 0) {
-        toast.error('Para abastecimento, preencha litros e quilometragem');
-        return;
-      }
-
-      const consumption = kilometers / liters;
-      transaction.fuelData = {
-        liters,
-        kilometers,
-        consumption: parseFloat(consumption.toFixed(2)),
-      };
+    try {
+      await saveTransaction(transaction);
+      toast.success(
+        transactionType === 'income' ? 'Receita adicionada!' : 'Despesa adicionada!'
+      );
+      await loadData();
+      setIsDialogOpen(false);
+      resetForm();
+    } catch (error) {
+      toast.error('Erro ao salvar transação');
     }
-
-    saveTransaction(transaction);
-    toast.success(
-      transactionType === 'income' ? 'Receita adicionada!' : 'Despesa adicionada!'
-    );
-    loadData();
-    setIsDialogOpen(false);
-    resetForm();
   };
 
   const resetForm = () => {
@@ -106,16 +96,18 @@ export default function TransactionsView() {
       description: '',
       date: new Date().toISOString().split('T')[0],
       memberId: '',
-      liters: '',
-      kilometers: '',
     });
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Tem certeza que deseja excluir esta transação?')) {
-      deleteTransaction(id);
-      toast.success('Transação excluída!');
-      loadData();
+      try {
+        await deleteTransaction(id);
+        toast.success('Transação excluída!');
+        await loadData();
+      } catch (error) {
+        toast.error('Erro ao excluir transação');
+      }
     }
   };
 
@@ -182,24 +174,6 @@ export default function TransactionsView() {
       <div className="flex items-center justify-between">
         <h2>Transações</h2>
         <div className="flex gap-2">
-          <Dialog open={isFuelDialogOpen} onOpenChange={setIsFuelDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                <Fuel className="w-4 h-4 mr-2" />
-                Abastecimento
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Registrar Abastecimento</DialogTitle>
-                <DialogDescription>
-                  Preencha os dados do abastecimento do veículo para calcular o consumo automaticamente
-                </DialogDescription>
-              </DialogHeader>
-              <QuickFuelEntry onSuccess={() => { loadData(); setIsFuelDialogOpen(false); }} />
-            </DialogContent>
-          </Dialog>
-          
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -284,33 +258,6 @@ export default function TransactionsView() {
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                 />
               </div>
-
-              {formData.category === 'Abastecimento' && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="liters">Litros Abastecidos</Label>
-                    <Input
-                      id="liters"
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      value={formData.liters}
-                      onChange={(e) => setFormData({ ...formData, liters: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="kilometers">Quilômetros Percorridos</Label>
-                    <Input
-                      id="kilometers"
-                      type="number"
-                      step="0.1"
-                      placeholder="0.0"
-                      value={formData.kilometers}
-                      onChange={(e) => setFormData({ ...formData, kilometers: e.target.value })}
-                    />
-                  </div>
-                </>
-              )}
 
               <div className="flex gap-2">
                 <Button onClick={handleSubmit} className="flex-1">
@@ -445,9 +392,7 @@ export default function TransactionsView() {
                                   transaction.type === 'income' ? 'bg-green-100' : 'bg-red-100'
                                 }`}
                               >
-                                {transaction.category === 'Abastecimento' ? (
-                                  <Fuel className={`w-5 h-5 ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`} />
-                                ) : transaction.type === 'income' ? (
+                                {transaction.type === 'income' ? (
                                   <TrendingUp className="w-5 h-5 text-green-600" />
                                 ) : (
                                   <TrendingDown className="w-5 h-5 text-red-600" />
@@ -467,14 +412,6 @@ export default function TransactionsView() {
                                   <span className="text-xs text-muted-foreground">
                                     {new Date(transaction.date).toLocaleDateString('pt-BR')}
                                   </span>
-                                  {transaction.fuelData && (
-                                    <>
-                                      <span className="text-xs text-muted-foreground">•</span>
-                                      <span className="text-xs text-muted-foreground">
-                                        {transaction.fuelData.consumption?.toFixed(2)} km/l
-                                      </span>
-                                    </>
-                                  )}
                                 </div>
                               </div>
                             </div>
