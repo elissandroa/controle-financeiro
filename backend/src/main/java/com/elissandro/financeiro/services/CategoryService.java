@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.elissandro.financeiro.dto.CategoryDTO;
 import com.elissandro.financeiro.entities.Category;
 import com.elissandro.financeiro.repositories.CategoryRepository;
+import com.elissandro.financeiro.services.exceptions.DatabaseException;
+import com.elissandro.financeiro.services.exceptions.ResourceNotFoundException;
 
 @Service
 public class CategoryService {
@@ -25,7 +27,7 @@ public class CategoryService {
 	@Transactional(readOnly = true)
 	public CategoryDTO findById(Long id) {
 		Category category = repository.findById(id)
-				.orElseThrow(() -> new RuntimeException("Category not found"));
+				.orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 		return new CategoryDTO(category);
 	}
 	
@@ -38,7 +40,7 @@ public class CategoryService {
 	
 	public CategoryDTO update(Long id, CategoryDTO categoryDetails) {
 		Category category = repository.findById(id)
-				.orElseThrow(() -> new RuntimeException("Category not found"));
+				.orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 		
 		category.setName(categoryDetails.getName());
 		category = repository.save(category);
@@ -47,9 +49,13 @@ public class CategoryService {
 	
 	public void delete(Long id) {
 		if (!repository.existsById(id)) {
-			throw new RuntimeException("Category not found");
+			throw new ResourceNotFoundException("Category not found");
 		}
-		repository.deleteById(id);
+		try {
+			repository.deleteById(id);
+		} catch (Exception e) {
+			throw new DatabaseException("Could not delete category: " + e.getMessage());
+		}
 	}
 
 }

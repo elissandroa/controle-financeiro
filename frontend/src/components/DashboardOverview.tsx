@@ -17,14 +17,21 @@ export default function DashboardOverview({ hideValues }: DashboardOverviewProps
 
   const loadData = async () => {
     try {
+      console.log('📊 [Dashboard] Carregando dados...');
       const [transactionsData, membersData] = await Promise.all([
         getTransactions(),
         getMembers()
       ]);
-      setTransactions(transactionsData);
-      setMembers(membersData);
+      console.log('📊 [Dashboard] Dados carregados:', {
+        transactions: transactionsData.length,
+        members: membersData.length
+      });
+      setTransactions(transactionsData || []);
+      setMembers(membersData || []);
     } catch (error) {
-      console.error('Erro ao carregar dados:', error);
+      console.error('❌ [Dashboard] Erro ao carregar dados:', error);
+      setTransactions([]);
+      setMembers([]);
     }
   };
 
@@ -32,23 +39,24 @@ export default function DashboardOverview({ hideValues }: DashboardOverviewProps
   const currentYear = new Date().getFullYear();
 
   const monthlyTransactions = transactions.filter((t) => {
+    if (!t || !t.date) return false;
     const date = new Date(t.date);
     return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
   });
 
   const totalIncome = monthlyTransactions
-    .filter((t) => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0);
+    .filter((t) => t && t.type === 'income')
+    .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 
   const totalExpenses = monthlyTransactions
-    .filter((t) => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0);
+    .filter((t) => t && t.type === 'expense')
+    .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 
   const balance = totalIncome - totalExpenses;
 
   const fuelExpenses = monthlyTransactions
-    .filter((t) => t.category === 'Abastecimento')
-    .reduce((sum, t) => sum + t.amount, 0);
+    .filter((t) => t && t.category === 'Abastecimento')
+    .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 
   const recentTransactions = [...transactions]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())

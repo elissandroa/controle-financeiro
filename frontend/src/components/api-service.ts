@@ -17,11 +17,49 @@ export interface ApiTransaction {
   amount: number;
   description: string;
   date: string;
-  transactionType: number; // 0 = income, 1 = expense
+  transactionType: 'INCOME' | 'EXPENSE';
   memberId: number;
+  member?: {
+    id: number;
+    name: string;
+    role: string;
+    createdAt: string;
+    transactions: any[];
+  };
   category: {
     id: number;
+    name?: string;
   };
+}
+
+// Interface para resposta paginada
+export interface PagedResponse<T> {
+  content: T[];
+  pageable: {
+    pageNumber: number;
+    pageSize: number;
+    sort: {
+      empty: boolean;
+      sorted: boolean;
+      unsorted: boolean;
+    };
+    offset: number;
+    paged: boolean;
+    unpaged: boolean;
+  };
+  last: boolean;
+  totalPages: number;
+  totalElements: number;
+  size: number;
+  number: number;
+  sort: {
+    empty: boolean;
+    sorted: boolean;
+    unsorted: boolean;
+  };
+  first: boolean;
+  numberOfElements: number;
+  empty: boolean;
 }
 
 export interface ApiUser {
@@ -150,7 +188,13 @@ export const membersApi = {
 export const transactionsApi = {
   getAll: async (): Promise<ApiTransaction[]> => {
     const response = await fetch(`${API_BASE_URL}/transactions`);
-    return handleResponse<ApiTransaction[]>(response);
+    const pagedData = await handleResponse<PagedResponse<ApiTransaction>>(response);
+    console.log('📊 Transactions API Response:', {
+      totalElements: pagedData.totalElements,
+      totalPages: pagedData.totalPages,
+      contentLength: pagedData.content.length
+    });
+    return pagedData.content;
   },
 
   getById: async (id: number): Promise<ApiTransaction> => {
@@ -162,7 +206,7 @@ export const transactionsApi = {
     amount: number;
     description: string;
     date: string;
-    transactionType: number;
+    transactionType: 'INCOME' | 'EXPENSE';
     memberId: number;
     categoryId: number;
   }): Promise<ApiTransaction> => {
@@ -185,7 +229,7 @@ export const transactionsApi = {
     amount: number;
     description: string;
     date: string;
-    transactionType: number;
+    transactionType: 'INCOME' | 'EXPENSE';
     memberId: number;
     categoryId: number;
   }): Promise<ApiTransaction> => {

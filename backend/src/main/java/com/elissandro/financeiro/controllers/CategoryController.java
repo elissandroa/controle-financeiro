@@ -22,6 +22,11 @@ public class CategoryController {
 	@Autowired
 	private CategoryService service;
 	
+	@GetMapping("/{id}")
+	public CategoryDTO findById(@PathVariable Long id) {
+		return service.findById(id);
+	}
+	
 	@GetMapping
 	public List<CategoryDTO> findAll() {
 		return service.findAll();

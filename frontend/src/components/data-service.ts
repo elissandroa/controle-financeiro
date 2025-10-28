@@ -92,11 +92,11 @@ function apiMemberToMember(apiMember: ApiMember): Member {
 }
 
 async function apiTransactionToTransaction(apiTransaction: ApiTransaction): Promise<Transaction> {
-  const categoryName = await getCategoryNameById(apiTransaction.category.id);
+  const categoryName = apiTransaction.category.name || await getCategoryNameById(apiTransaction.category.id);
   
   return {
     id: apiTransaction.id.toString(),
-    type: apiTransaction.transactionType === 0 ? 'income' : 'expense',
+    type: apiTransaction.transactionType === 'INCOME' ? 'income' : 'expense',
     amount: apiTransaction.amount,
     category: categoryName,
     description: apiTransaction.description,
@@ -248,12 +248,14 @@ export async function getTransactions(): Promise<Transaction[]> {
   if (useApiMode) {
     try {
       const apiTransactions = await transactionsApi.getAll();
+      console.log('🔄 Converting API transactions:', apiTransactions.length);
       const transactions = await Promise.all(
         apiTransactions.map(apiTransactionToTransaction)
       );
+      console.log('✅ Transactions converted:', transactions.length);
       return transactions;
     } catch (error) {
-      console.error('Erro ao buscar transações da API:', error);
+      console.error('❌ Erro ao buscar transações da API:', error);
       // Fallback para localStorage
       return getTransactionsFromLocal();
     }
@@ -270,7 +272,7 @@ export async function saveTransaction(transaction: Omit<Transaction, 'id'>): Pro
         amount: transaction.amount,
         description: transaction.description,
         date: transaction.date,
-        transactionType: transaction.type === 'income' ? 0 : 1,
+        transactionType: transaction.type === 'income' ? 'INCOME' : 'EXPENSE',
         memberId: parseInt(transaction.memberId),
         categoryId: categoryId,
       });
@@ -304,7 +306,7 @@ export async function updateTransaction(id: string, updates: Partial<Transaction
         description: updates.description ?? currentTransaction.description,
         date: updates.date ?? currentTransaction.date,
         transactionType: updates.type 
-          ? (updates.type === 'income' ? 0 : 1)
+          ? (updates.type === 'income' ? 'INCOME' : 'EXPENSE')
           : currentTransaction.transactionType,
         memberId: updates.memberId 
           ? parseInt(updates.memberId)
