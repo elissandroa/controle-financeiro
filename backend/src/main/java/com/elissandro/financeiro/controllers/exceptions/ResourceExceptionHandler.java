@@ -1,4 +1,4 @@
-package com.elissandro.financeiro.controllers;
+package com.elissandro.financeiro.controllers.exceptions;
 
 import java.time.Instant;
 
@@ -53,6 +53,14 @@ public class ResourceExceptionHandler {
 	public ResponseEntity<StandardError> methodArgumentNotValid(MethodArgumentNotValidException e, HttpServletRequest request) {
 		String error = "Validation error";
 		HttpStatus status = HttpStatus.BAD_REQUEST;
+		StandardError err = new StandardError(Instant.now(), status.value(), error, e.getMessage(), request.getRequestURI());
+		return ResponseEntity.status(status).body(err);
+	}
+	
+	@ExceptionHandler(NullPointerException.class)
+	public ResponseEntity<StandardError> nullPointer(NullPointerException e, HttpServletRequest request) {
+		String error = "Null pointer exception";
+		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
 		StandardError err = new StandardError(Instant.now(), status.value(), error, e.getMessage(), request.getRequestURI());
 		return ResponseEntity.status(status).body(err);
 	}

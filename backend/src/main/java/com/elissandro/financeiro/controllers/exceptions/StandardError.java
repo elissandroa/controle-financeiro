@@ -1,4 +1,4 @@
-package com.elissandro.financeiro.controllers;
+package com.elissandro.financeiro.controllers.exceptions;
 
 import java.io.Serializable;
 import java.time.Instant;

@@ -215,7 +215,13 @@ export async function deleteMember(id: string): Promise<void> {
 // LocalStorage Transactions
 function getTransactionsFromLocal(): Transaction[] {
   const data = localStorage.getItem(TRANSACTIONS_KEY);
-  return data ? JSON.parse(data) : [];
+  const transactions = data ? JSON.parse(data) : [];
+  // Ordena por data decrescente (mais recentes primeiro), depois por ID
+  return transactions.sort((a: Transaction, b: Transaction) => {
+    const dateCompare = new Date(b.date).getTime() - new Date(a.date).getTime();
+    if (dateCompare !== 0) return dateCompare;
+    return b.id.localeCompare(a.id);
+  });
 }
 
 function saveTransactionToLocal(transaction: Omit<Transaction, 'id'>): Transaction {

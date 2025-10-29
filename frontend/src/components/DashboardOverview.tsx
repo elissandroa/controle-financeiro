@@ -24,7 +24,8 @@ export default function DashboardOverview({ hideValues }: DashboardOverviewProps
       ]);
       console.log('📊 [Dashboard] Dados carregados:', {
         transactions: transactionsData.length,
-        members: membersData.length
+        members: membersData.length,
+        primeira: transactionsData[0] ? { id: transactionsData[0].id, date: transactionsData[0].date } : null
       });
       setTransactions(transactionsData || []);
       setMembers(membersData || []);
@@ -58,9 +59,8 @@ export default function DashboardOverview({ hideValues }: DashboardOverviewProps
     .filter((t) => t && t.category === 'Abastecimento')
     .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 
-  const recentTransactions = [...transactions]
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 5);
+  // As transações já vêm ordenadas (mais recentes primeiro)
+  const recentTransactions = transactions.slice(0, 5);
 
   const formatCurrency = (value: number) => {
     if (hideValues) return '••••••';

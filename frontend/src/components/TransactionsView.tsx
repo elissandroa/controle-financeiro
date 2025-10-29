@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from './ui/pagination';
-import { Plus, Trash2, TrendingUp, TrendingDown, Calendar, Filter } from 'lucide-react';
+import { Plus, Trash2, TrendingUp, TrendingDown, Calendar, Filter, Pencil } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import {
   Transaction,
@@ -15,6 +15,7 @@ import {
   getTransactions,
   getMembers,
   saveTransaction,
+  updateTransaction,
   deleteTransaction,
   EXPENSE_CATEGORIES,
   INCOME_CATEGORIES,
@@ -28,6 +29,7 @@ export default function TransactionsView() {
   const [currentPage, setCurrentPage] = useState(1);
   const [filterMemberId, setFilterMemberId] = useState<string>('all');
   const [filterMonth, setFilterMonth] = useState<string>('all');
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const itemsPerPage = 10;
   const [formData, setFormData] = useState({
     amount: '',
@@ -47,6 +49,14 @@ export default function TransactionsView() {
         getTransactions(),
         getMembers()
       ]);
+      console.log('📋 [TransactionsView] Transações carregadas (ordenadas por ID desc):', {
+        total: transactionsData.length,
+        primeira: transactionsData[0] ? { id: transactionsData[0].id, date: transactionsData[0].date } : null,
+        ultima: transactionsData[transactionsData.length - 1] ? { 
+          id: transactionsData[transactionsData.length - 1].id, 
+          date: transactionsData[transactionsData.length - 1].date 
+        } : null
+      });
       setTransactions(transactionsData);
       setMembers(membersData);
       setCurrentPage(1);
@@ -67,25 +77,38 @@ export default function TransactionsView() {
       return;
     }
 
-    const transaction: Omit<Transaction, 'id'> = {
-      type: transactionType,
-      amount,
-      category: formData.category,
-      description: formData.description,
-      date: formData.date,
-      memberId: formData.memberId,
-    };
-
     try {
-      await saveTransaction(transaction);
-      toast.success(
-        transactionType === 'income' ? 'Receita adicionada!' : 'Despesa adicionada!'
-      );
+      if (editingTransaction) {
+        // Editando transação existente
+        await updateTransaction(editingTransaction.id, {
+          type: transactionType,
+          amount,
+          category: formData.category,
+          description: formData.description,
+          date: formData.date,
+          memberId: formData.memberId,
+        });
+        toast.success('Transação atualizada!');
+      } else {
+        // Criando nova transação
+        const transaction: Omit<Transaction, 'id'> = {
+          type: transactionType,
+          amount,
+          category: formData.category,
+          description: formData.description,
+          date: formData.date,
+          memberId: formData.memberId,
+        };
+        await saveTransaction(transaction);
+        toast.success(
+          transactionType === 'income' ? 'Receita adicionada!' : 'Despesa adicionada!'
+        );
+      }
       await loadData();
       setIsDialogOpen(false);
       resetForm();
     } catch (error) {
-      toast.error('Erro ao salvar transação');
+      toast.error(editingTransaction ? 'Erro ao atualizar transação' : 'Erro ao salvar transação');
     }
   };
 
@@ -97,6 +120,20 @@ export default function TransactionsView() {
       date: new Date().toISOString().split('T')[0],
       memberId: '',
     });
+    setEditingTransaction(null);
+  };
+
+  const handleEdit = (transaction: Transaction) => {
+    setEditingTransaction(transaction);
+    setTransactionType(transaction.type);
+    setFormData({
+      amount: transaction.amount.toString(),
+      category: transaction.category,
+      description: transaction.description,
+      date: transaction.date,
+      memberId: transaction.memberId,
+    });
+    setIsDialogOpen(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -111,14 +148,13 @@ export default function TransactionsView() {
     }
   };
 
-  const sortedTransactions = [...transactions].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
+  // As transações já vêm ordenadas do serviço (mais recentes primeiro)
+  // Não é necessário ordenar novamente
 
   // Get available months for filter
   const availableMonths = Array.from(
     new Set(
-      sortedTransactions.map(t => {
+      transactions.map(t => {
         const date = new Date(t.date);
         return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       })
@@ -126,7 +162,7 @@ export default function TransactionsView() {
   ).sort((a, b) => b.localeCompare(a));
 
   // Apply filters
-  const filteredTransactions = sortedTransactions.filter(transaction => {
+  const filteredTransactions = transactions.filter(transaction => {
     const memberMatch = filterMemberId === 'all' || transaction.memberId === filterMemberId;
     const monthMatch = filterMonth === 'all' || (() => {
       const date = new Date(transaction.date);
@@ -174,7 +210,10 @@ export default function TransactionsView() {
       <div className="flex items-center justify-between">
         <h2>Transações</h2>
         <div className="flex gap-2">
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) resetForm();
+          }}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="w-4 h-4 mr-2" />
@@ -183,9 +222,13 @@ export default function TransactionsView() {
             </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Adicionar Transação</DialogTitle>
+              <DialogTitle>
+                {editingTransaction ? 'Editar Transação' : 'Adicionar Transação'}
+              </DialogTitle>
               <DialogDescription>
-                Preencha os campos para registrar uma nova receita ou despesa
+                {editingTransaction 
+                  ? 'Atualize os campos da transação' 
+                  : 'Preencha os campos para registrar uma nova receita ou despesa'}
               </DialogDescription>
             </DialogHeader>
             <Tabs value={transactionType} onValueChange={(v) => setTransactionType(v as any)}>
@@ -261,7 +304,7 @@ export default function TransactionsView() {
 
               <div className="flex gap-2">
                 <Button onClick={handleSubmit} className="flex-1">
-                  Adicionar
+                  {editingTransaction ? 'Atualizar' : 'Adicionar'}
                 </Button>
                 <Button onClick={() => setIsDialogOpen(false)} variant="outline" className="flex-1">
                   Cancelar
@@ -279,12 +322,17 @@ export default function TransactionsView() {
         </CardHeader>
         <CardContent>
           {/* Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <Filter className="w-4 h-4" />
-                Filtrar por Membro
-              </Label>
+          <div className="space-y-3 mb-6">
+            <div className="flex items-center justify-between text-xs text-muted-foreground bg-muted/50 px-3 py-2 rounded-md">
+              <span>📅 Ordenado por mais recentes primeiro</span>
+              <span>{filteredTransactions.length} transação{filteredTransactions.length !== 1 ? 'ões' : ''}</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Filter className="w-4 h-4" />
+                  Filtrar por Membro
+                </Label>
               <Select 
                 value={filterMemberId} 
                 onValueChange={(v) => {
@@ -336,17 +384,18 @@ export default function TransactionsView() {
                 </SelectContent>
               </Select>
             </div>
+            </div>
           </div>
 
           {/* Transaction Count */}
-          {sortedTransactions.length > 0 && (
+          {transactions.length > 0 && (
             <div className="mb-4 text-sm text-muted-foreground">
               Mostrando {filteredTransactions.length > 0 ? startIndex + 1 : 0} - {Math.min(endIndex, filteredTransactions.length)} de {filteredTransactions.length} transação(ões)
             </div>
           )}
 
           {/* Transaction List */}
-          {sortedTransactions.length === 0 ? (
+          {transactions.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground">
                 Nenhuma transação registrada. Clique em "Nova Transação" para começar.
@@ -415,7 +464,7 @@ export default function TransactionsView() {
                                 </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
                               <span
                                 className={`${
                                   transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
@@ -427,8 +476,16 @@ export default function TransactionsView() {
                               <Button
                                 variant="ghost"
                                 size="sm"
+                                onClick={() => handleEdit(transaction)}
+                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => handleDelete(transaction.id)}
-                                className="text-red-600 hover:text-red-700"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>

@@ -60,9 +60,7 @@ public class TransactionService {
 		transaction.setDate(dto.getDate());
 		transaction.setTransactionType(dto.getTransactionType());
 		transaction.setDescription(dto.getDescription());
-		transaction.setMember(dto.getMember().getId() != null
-				? new Member(dto.getMember().getId(), null, null, null)
-				: null);
+		transaction.setMember(new Member(dto.getMemberId(), null, null, null));
 		transaction.setCategory(new Category(dto.getCategory().getId(), null));
 		transaction = repository.save(transaction);
 		return new TransactionDTO(transaction);

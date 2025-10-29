@@ -187,14 +187,32 @@ export const membersApi = {
 // Transactions API
 export const transactionsApi = {
   getAll: async (): Promise<ApiTransaction[]> => {
-    const response = await fetch(`${API_BASE_URL}/transactions`);
-    const pagedData = await handleResponse<PagedResponse<ApiTransaction>>(response);
-    console.log('📊 Transactions API Response:', {
-      totalElements: pagedData.totalElements,
-      totalPages: pagedData.totalPages,
-      contentLength: pagedData.content.length
-    });
-    return pagedData.content;
+    // Busca todas as páginas com ordenação decrescente por ID (mais recentes primeiro)
+    let allTransactions: ApiTransaction[] = [];
+    let currentPage = 0;
+    let hasMore = true;
+    
+    while (hasMore) {
+      const response = await fetch(
+        `${API_BASE_URL}/transactions?page=${currentPage}&size=100&sort=date,desc&sort=id,desc`
+      );
+      const pagedData = await handleResponse<PagedResponse<ApiTransaction>>(response);
+      
+      allTransactions = [...allTransactions, ...pagedData.content];
+      
+      hasMore = !pagedData.last;
+      currentPage++;
+      
+      console.log(`📊 Transactions API - Página ${currentPage}:`, {
+        totalElements: pagedData.totalElements,
+        totalPages: pagedData.totalPages,
+        contentLength: pagedData.content.length,
+        carregadas: allTransactions.length,
+        ordenacao: 'date,desc;id,desc (mais recentes primeiro)'
+      });
+    }
+    
+    return allTransactions;
   },
 
   getById: async (id: number): Promise<ApiTransaction> => {
