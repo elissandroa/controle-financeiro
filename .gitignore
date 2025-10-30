@@ -1,0 +1,47 @@
+########################################
+# FRONTEND (Node / Vite / React / etc)
+########################################
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.env
+/frontend/.env.*       # caso crie versões como .env.local ou .env.prod
+/frontend/.vite
+/frontend/.next        # caso use Next.js no futuro
+
+########################################
+# BACKEND (Spring Boot / Java / Maven)
+########################################
+/backend/target/
+/backend/.env
+/backend/*.log
+/backend/*.iml
+/backend/.settings/
+/backend/.classpath
+/backend/.project
+
+# Caso use Gradle no futuro:
+/backend/.gradle/
+/backend/build/
+
+########################################
+# IDEs
+########################################
+
+# VSCode
+.vscode/
+
+# IntelliJ (caso abra o backend com IDEA em algum momento)
+.idea/
+*.iml
+
+# Eclipse / Spring Tool Suite
+.springBeans
+*.launch
+*.factorypath
+
+########################################
+# Sistema operacional
+########################################
+.DS_Store
+Thumbs.db
+
