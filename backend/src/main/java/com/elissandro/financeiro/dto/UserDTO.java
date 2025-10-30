@@ -1,28 +1,37 @@
 package com.elissandro.financeiro.dto;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
 import com.elissandro.financeiro.entities.User;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 
 public class UserDTO implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	private Long id;
+	@NotBlank(message = "Campo obrigatório")
 	private String firstName;
 	private String lastName;
+	@Email(message = "Email inválido")
 	private String email;
-	private List<RoleDTO> roles = new ArrayList<>();
+	private String phone;
 	
+	Set<RoleDTO> roles = new HashSet<>();
+
 	public UserDTO() {
 	}
 	
-	public UserDTO(Long id, String firstName, String lastName, String email) {
+	public UserDTO(Long id, String firstName, String lastName, String email, String phone) {
 		this.id = id;
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.email = email;
+		this.phone = phone;
 	}
 	
 	public UserDTO(User entity) {
@@ -30,7 +39,8 @@ public class UserDTO implements Serializable {
 		this.firstName = entity.getFirstName();
 		this.lastName = entity.getLastName();
 		this.email = entity.getEmail();
-		this.roles = entity.getRoles().stream().map(role -> new RoleDTO(role)).toList();
+		this.phone = entity.getPhone();
+		entity.getRoles().forEach(role -> this.roles.add(new RoleDTO(role)));
 	}
 
 	public Long getId() {
@@ -65,8 +75,33 @@ public class UserDTO implements Serializable {
 		this.email = email;
 	}
 
-	public List<RoleDTO> getRoles() {
+	public String getPhone() {
+		return phone;
+	}
+
+	public void setPhone(String phone) {
+		this.phone = phone;
+	}
+	
+	public Set<RoleDTO> getRoles() {
 		return roles;
+	}
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(id);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		UserDTO other = (UserDTO) obj;
+		return Objects.equals(id, other.id);
 	}
 
 }

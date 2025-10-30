@@ -1,10 +1,14 @@
 package com.elissandro.financeiro.entities;
 
-import java.io.Serializable;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -16,32 +20,35 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "users")
-public class User implements Serializable {
+@Table(name = "tb_user")
+public class User implements UserDetails {
 	private static final long serialVersionUID = 1L;
-
-	@Id	
+	
+	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	private String firstName;
 	private String lastName;
-	private String email;
-	String password;
+	@Column(unique = true)
+	String email;
+	private String phone;
+	private String password;
 	
 	@ManyToMany(fetch = FetchType.EAGER)
-	@JoinTable(name = "user_roles", 
-		joinColumns = @JoinColumn(name = "user_id"), 
+	@JoinTable(name = "tb_user_role",
+		joinColumns = @JoinColumn(name = "user_id"),
 		inverseJoinColumns = @JoinColumn(name = "role_id"))
 	private Set<Role> roles = new HashSet<>();
 	
 	public User() {
 	}
 	
-	public User(Long id, String firstName, String lastName, String email, String password) {
+	public User(Long id, String firstName, String lastName, String email, String phone, String password) {
 		this.id = id;
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.email = email;
+		this.phone = phone;
 		this.password = password;
 	}
 
@@ -77,10 +84,40 @@ public class User implements Serializable {
 		this.email = email;
 	}
 
+	public String getPhone() {
+		return phone;
+	}
+
+	public void setPhone(String phone) {
+		this.phone = phone;
+	}
+
+	@Override
+	public String getPassword() {
+		return password;
+	}
+
 	public void setPassword(String password) {
 		this.password = password;
 	}
-
+	
+	public Set<Role> getRoles() {
+		return roles;
+	}
+	
+	public void addRole(Role role) {
+		roles.add(role);
+	}
+	
+	public boolean hasRole(String roleName) {
+		for (Role role : roles) {
+			if(role.getAuthority().equals(roleName)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	@Override
 	public int hashCode() {
 		return Objects.hash(id);
@@ -98,8 +135,33 @@ public class User implements Serializable {
 		return Objects.equals(id, other.id);
 	}
 
-	public Set<Role> getRoles() {
+	@Override
+	public Collection<? extends GrantedAuthority> getAuthorities() {
 		return roles;
 	}
 
+	@Override
+	public String getUsername() {
+		return email;
+	}
+
+	@Override
+	public boolean isAccountNonExpired() {
+		return true;
+	}
+
+	@Override
+	public boolean isAccountNonLocked() {
+		return true;
+	}
+
+	@Override
+	public boolean isCredentialsNonExpired() {
+		return true;
+	}
+
+	@Override
+	public boolean isEnabled() {
+		return true;
+	}
 }

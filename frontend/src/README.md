@@ -70,6 +70,8 @@ Sistema completo de gerenciamento financeiro familiar com autenticação OAuth2,
 
 **Desenvolvimento:**
 - 🚀 [QUICK_REFERENCE.md](./QUICK_REFERENCE.md) - **Referência rápida**
+- 🏷️ [CATEGORIES_CRUD.md](./CATEGORIES_CRUD.md) - **CRUD de Categorias**
+- 🔄 [DYNAMIC_CATEGORIES_FLOW.md](./DYNAMIC_CATEGORIES_FLOW.md) - **Fluxo de Categorias Dinâmicas**
 - 🧪 [TESTE_RECUPERACAO.md](./TESTE_RECUPERACAO.md) - **Guia de teste (recuperação)**
 - ⚙️ [BACKEND_SETUP.md](./BACKEND_SETUP.md) - **Setup do backend (recuperação de senha)**
 - 🐛 [DEBUGGING.md](./DEBUGGING.md) - **Troubleshooting**

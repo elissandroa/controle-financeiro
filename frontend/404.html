@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Redirecting…</title>
+    <script>
+      // Guarda o caminho original na sessionStorage
+      sessionStorage.redirect = location.pathname + location.search + location.hash;
+      // Redireciona para a rota raiz do seu app
+      window.location.replace("/controle-financeiro/");
+    </script>
+  </head>
+  <body></body>
+</html>

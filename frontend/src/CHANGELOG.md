@@ -1,5 +1,206 @@
 # Changelog - Controle Financeiro Familiar
 
+## Versão 2.5.1 - Categorias Dinâmicas em Transações
+
+### Data: 30 de Outubro de 2025
+
+---
+
+## 🔄 Integração Dinâmica de Categorias
+
+### Atualização
+
+As categorias agora são **carregadas dinamicamente do banco de dados** ao criar transações.
+
+**Antes:**
+- Categorias fixas (EXPENSE_CATEGORIES, INCOME_CATEGORIES)
+- Hardcoded no código
+- Não personalizável
+
+**Depois:**
+- Categorias dinâmicas da API
+- Atualizadas em tempo real
+- Totalmente personalizáveis
+
+#### Arquivos Modificados
+
+1. **`/components/TransactionsView.tsx`**
+   - Removido import de EXPENSE_CATEGORIES e INCOME_CATEGORIES
+   - Adicionado import de categoriesApi e ApiCategory
+   - Adicionado state categories: ApiCategory[]
+   - loadData() agora carrega categorias da API
+   - Select de categorias usa categories.map()
+   - Passa onCategoryChange para CategoriesManagement
+   - Mensagem quando não há categorias cadastradas
+
+2. **`/components/CategoriesManagement.tsx`**
+   - Adicionado interface CategoriesManagementProps
+   - Aceita prop onCategoryChange opcional
+   - Chama onCategoryChange após criar/atualizar/deletar
+   - Notifica TransactionsView para recarregar dados
+
+3. **`/CATEGORIES_CRUD.md`**
+   - Adicionada seção "Integração com Transações"
+   - Documentado fluxo de categorias dinâmicas
+   - Exemplos de código atualizado
+
+#### Fluxo de Atualização
+
+```
+1. Usuário cria categoria no CategoriesManagement
+   ↓
+2. handleSubmit() salva na API
+   ↓
+3. onCategoryChange() é chamado
+   ↓
+4. TransactionsView.loadData() recarrega categorias
+   ↓
+5. Select de categorias atualiza automaticamente
+```
+
+#### Benefícios
+
+- ✅ Categorias personalizadas por família
+- ✅ Sincronização automática entre componentes
+- ✅ Não depende de código hardcoded
+- ✅ Atualização em tempo real
+- ✅ Melhor UX (vê mudanças imediatamente)
+
+#### Validações
+
+- Se não houver categorias, o Select mostra:
+  ```
+  Nenhuma categoria cadastrada.
+  Cadastre uma categoria primeiro.
+  ```
+
+---
+
+## Versão 2.5.0 - CRUD de Categorias
+
+### Data: 30 de Outubro de 2025
+
+---
+
+## 🏷️ Gerenciamento de Categorias
+
+### Novo Recurso
+
+Implementado **CRUD completo de categorias** integrado à seção de transações.
+
+#### Componente CategoriesManagement
+
+**Arquivo criado:** `/components/CategoriesManagement.tsx`
+
+**Funcionalidades:**
+- ✅ **Criar** categoria com nome personalizado
+- ✅ **Listar** todas as categorias em grid responsivo
+- ✅ **Editar** categoria existente
+- ✅ **Excluir** categoria com confirmação
+- ✅ Bearer token automático em todas as requisições
+- ✅ Loading states e error handling
+- ✅ Toast notifications
+- ✅ Validações de formulário
+
+**Integração:**
+```tsx
+// TransactionsView.tsx
+import CategoriesManagement from './CategoriesManagement';
+
+// Renderizado no topo da página de transações
+<CategoriesManagement />
+```
+
+#### API Endpoints
+
+**Base:** `http://localhost:8080/categories`
+
+**Headers (automático):**
+```
+Authorization: Bearer {JWT_TOKEN}
+Content-Type: application/json
+```
+
+**Operações:**
+```typescript
+// Listar
+GET /categories
+
+// Criar
+POST /categories
+Body: { "name": "Vestuário" }
+
+// Atualizar
+PUT /categories/{id}
+Body: { "id": 1, "name": "Novo Nome" }
+
+// Excluir
+DELETE /categories/{id}
+```
+
+#### Interface do Usuário
+
+**Localização:** Dashboard → Transações → Card "Gerenciar Categorias"
+
+**Layout:**
+- Grid responsivo (1-3 colunas)
+- Card com título e descrição
+- Botão "+ Nova Categoria"
+- Lista com botões de editar e excluir
+- Estado vazio com ilustração
+
+**Diálogos:**
+- Criar/Editar: Input com validação
+- Excluir: Confirmação com aviso
+
+**Feedback:**
+- Toast de sucesso/erro
+- Loading states
+- Atualização automática da lista
+
+#### Arquivos Modificados
+
+1. **`/components/TransactionsView.tsx`**
+   - Import do CategoriesManagement
+   - Renderização do componente
+
+2. **`/components/api-service.ts`**
+   - Já tinha categoriesApi completo
+   - Todos os métodos usam getAuthHeaders()
+
+#### Documentação
+
+**Arquivo criado:** `/CATEGORIES_CRUD.md`
+
+Documentação completa incluindo:
+- Visão geral do recurso
+- API endpoints com exemplos
+- Interface do usuário
+- Como testar (manual, cURL, DevTools)
+- Troubleshooting
+- Exemplos de categorias
+
+### Benefícios
+
+- ✅ Categorias personalizadas por família
+- ✅ Não depende mais de categorias fixas
+- ✅ Flexibilidade para adicionar/remover
+- ✅ Facilita organização financeira
+- ✅ Integrado ao fluxo de transações
+
+### Testado e Funcionando
+
+- ✅ Criar categoria
+- ✅ Listar categorias
+- ✅ Editar categoria
+- ✅ Excluir categoria
+- ✅ Bearer token enviado
+- ✅ Error handling
+- ✅ Loading states
+- ✅ Responsividade
+
+---
+
 ## Versão 2.4.1 - Correção de Variáveis de Ambiente
 
 ### Data: 30 de Outubro de 2025

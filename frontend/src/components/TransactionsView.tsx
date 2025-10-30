@@ -17,13 +17,14 @@ import {
   saveTransaction,
   updateTransaction,
   deleteTransaction,
-  EXPENSE_CATEGORIES,
-  INCOME_CATEGORIES,
 } from './api-helpers';
+import { categoriesApi, ApiCategory } from './api-service';
+import CategoriesManagement from './CategoriesManagement';
 
 export default function TransactionsView() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
+  const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
   const [currentPage, setCurrentPage] = useState(1);
@@ -45,12 +46,14 @@ export default function TransactionsView() {
 
   const loadData = async () => {
     try {
-      const [transactionsData, membersData] = await Promise.all([
+      const [transactionsData, membersData, categoriesData] = await Promise.all([
         getTransactions(),
-        getMembers()
+        getMembers(),
+        categoriesApi.getAll()
       ]);
       setTransactions(transactionsData);
       setMembers(membersData);
+      setCategories(categoriesData);
       setCurrentPage(1);
     } catch (error) {
       toast.error('Erro ao carregar dados');
@@ -195,10 +198,11 @@ export default function TransactionsView() {
     }).format(value);
   };
 
-  const categories = transactionType === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
-
   return (
     <div className="space-y-6">
+      {/* Gerenciamento de Categorias */}
+      <CategoriesManagement onCategoryChange={loadData} />
+
       <div className="flex items-center justify-between">
         <h2>Transações</h2>
         <div className="flex gap-2">
@@ -253,11 +257,19 @@ export default function TransactionsView() {
                     <SelectValue placeholder="Selecione uma categoria" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
-                    ))}
+                    {categories.length === 0 ? (
+                      <div className="px-2 py-6 text-center text-sm text-muted-foreground">
+                        Nenhuma categoria cadastrada.
+                        <br />
+                        Cadastre uma categoria primeiro.
+                      </div>
+                    ) : (
+                      categories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.name}>
+                          {cat.name}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
