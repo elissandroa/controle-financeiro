@@ -1,241 +1,776 @@
 # Integração com API Spring Boot
 
-## Configuração
+## Visão Geral
 
-O aplicativo está configurado para usar a API Java Spring Boot rodando em `http://localhost:8080`.
+O aplicativo de controle financeiro familiar está integrado com uma API REST Java Spring Boot rodando em `http://localhost:8080`.
 
-⚠️ **MODO HÍBRIDO**: O aplicativo funciona em dois modos:
-- **Modo Online (API)**: Quando o backend Spring Boot está disponível
-- **Modo Offline (Local)**: Quando o backend não está disponível, usando localStorage
+**⚠️ IMPORTANTE**: O aplicativo funciona **APENAS** com a API online. Não há armazenamento local de dados.
 
-## Estrutura
+## Estrutura de Arquivos
 
 ### Arquivos Principais
 
-1. **`/components/api-service.ts`** - Serviço que faz as chamadas HTTP para a API
-2. **`/components/data-service.ts`** - Camada de adaptação que converte entre o formato da API e o formato do frontend
+1. **`/components/auth-service.ts`** - Gerencia autenticação OAuth2 e tokens JWT
+2. **`/components/api-service.ts`** - Faz as chamadas HTTP diretas para a API
+3. **`/components/api-helpers.ts`** - Camada de abstração que converte tipos e simplifica chamadas
+
+## Autenticação
+
+### OAuth2 Password Grant
+
+Todas as requisições são autenticadas usando OAuth2 com tokens JWT.
+
+**Endpoint de Login:**
+```
+POST http://localhost:8080/oauth2/token
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic base64(myclientid:myclientsecret)
+
+grant_type=password
+username={username}
+password={password}
+```
+
+**IMPORTANTE:** O `client_id` e `client_secret` vão APENAS no header `Authorization: Basic`, não no body!
+
+**Resposta:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "Bearer",
+  "expires_in": 86400,
+  "refresh_token": "optional_refresh_token"
+}
+```
+
+### Headers Automáticos
+
+Todas as requisições incluem automaticamente:
+```javascript
+{
+  "Authorization": "Bearer {token}",
+  "Content-Type": "application/json"
+}
+```
 
 ## Endpoints Utilizados
 
 ### Categories
-- `GET /categories` - Lista todas as categorias
-- `POST /categories` - Cria uma nova categoria
-- `PUT /categories/:id` - Atualiza uma categoria
-- `DELETE /categories/:id` - Remove uma categoria
 
-### Members
-- `GET /members` - Lista todos os membros
-- `POST /members` - Cria um novo membro
-- `PUT /members/:id` - Atualiza um membro
-- `DELETE /members/:id` - Remove um membro
+#### Listar Categorias
+```
+GET /categories
+Authorization: Bearer {token}
+```
 
-### Transactions
-- `GET /transactions` - Lista todas as transações
-- `GET /transactions/:id` - Busca uma transação específica
-- `POST /transactions` - Cria uma nova transação
-- `PUT /transactions/:id` - Atualiza uma transação
-- `DELETE /transactions/:id` - Remove uma transação
-
-## Mapeamento de Dados
-
-### TransactionType
-- `0` = Income (Receita)
-- `1` = Expense (Despesa)
-
-### Formato da API vs Frontend
-
-**API Transaction:**
+**Resposta:**
 ```json
+[
+  {
+    "id": 1,
+    "name": "Alimentação"
+  },
+  {
+    "id": 2,
+    "name": "Transporte"
+  }
+]
+```
+
+#### Criar Categoria
+```
+POST /categories
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "name": "Nova Categoria"
+}
+```
+
+#### Atualizar Categoria
+```
+PUT /categories/{id}
+Authorization: Bearer {token}
+Content-Type: application/json
+
 {
   "id": 1,
+  "name": "Categoria Atualizada"
+}
+```
+
+#### Deletar Categoria
+```
+DELETE /categories/{id}
+Authorization: Bearer {token}
+```
+
+### Members
+
+#### Listar Membros
+```
+GET /members
+Authorization: Bearer {token}
+```
+
+**Resposta:**
+```json
+[
+  {
+    "id": 1,
+    "name": "João Silva",
+    "role": "Pai"
+  },
+  {
+    "id": 2,
+    "name": "Maria Silva",
+    "role": "Mãe"
+  }
+]
+```
+
+#### Criar Membro
+```
+POST /members
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "name": "João Silva",
+  "role": "Pai"
+}
+```
+
+#### Atualizar Membro
+```
+PUT /members/{id}
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "name": "João Silva",
+  "role": "Pai"
+}
+```
+
+#### Deletar Membro
+```
+DELETE /members/{id}
+Authorization: Bearer {token}
+```
+
+### Transactions
+
+#### Listar Transações
+```
+GET /transactions?page=0&size=100&sort=date,desc&sort=id,desc
+Authorization: Bearer {token}
+```
+
+**Resposta (Paginada):**
+```json
+{
+  "content": [
+    {
+      "id": 1,
+      "amount": 250.75,
+      "description": "Compras do mês",
+      "date": "2024-01-15",
+      "transactionType": "EXPENSE",
+      "memberId": 1,
+      "member": {
+        "id": 1,
+        "name": "João Silva",
+        "role": "Pai"
+      },
+      "category": {
+        "id": 1,
+        "name": "Alimentação"
+      }
+    }
+  ],
+  "pageable": {
+    "pageNumber": 0,
+    "pageSize": 100
+  },
+  "totalElements": 50,
+  "totalPages": 1,
+  "last": true,
+  "first": true
+}
+```
+
+#### Buscar Transação por ID
+```
+GET /transactions/{id}
+Authorization: Bearer {token}
+```
+
+#### Criar Transação
+```
+POST /transactions
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
   "amount": 250.75,
-  "description": "Supermercado Extra",
-  "date": "2024-06-01",
-  "transactionType": 1,
+  "description": "Compras do mês",
+  "date": "2024-01-15",
+  "transactionType": "EXPENSE",
   "memberId": 1,
   "category": {
-    "id": 5
+    "id": 1
   }
 }
 ```
 
-**Frontend Transaction:**
-```typescript
+#### Atualizar Transação
+```
+PUT /transactions/{id}
+Authorization: Bearer {token}
+Content-Type: application/json
+
 {
-  id: "1",
-  type: "expense",
-  amount: 250.75,
-  category: "Alimentação",
-  description: "Supermercado Extra",
-  date: "2024-06-01",
-  memberId: "1"
+  "id": 1,
+  "amount": 250.75,
+  "description": "Compras do mês",
+  "date": "2024-01-15",
+  "transactionType": "EXPENSE",
+  "memberId": 1,
+  "category": {
+    "id": 1
+  }
 }
 ```
 
-## Como Iniciar
-
-### Opção 1: Modo Online (com API)
-
-1. **Inicie o Backend Spring Boot**
-```bash
-# Na pasta do projeto Spring Boot
-./mvnw spring-boot:run
-# ou
-java -jar target/seu-app.jar
+#### Deletar Transação
+```
+DELETE /transactions/{id}
+Authorization: Bearer {token}
 ```
 
-O servidor deve estar rodando em `http://localhost:8080`
+### Users
 
-2. **Inicie o Frontend**
-   - O aplicativo detectará automaticamente a API
-   - Você verá uma notificação "Modo Online" e um badge verde no header
-   - Todos os dados serão salvos no backend
+#### Listar Usuários
+```
+GET /users
+Authorization: Bearer {token}
+```
 
-### Opção 2: Modo Offline (sem API)
+**Resposta (Paginada):**
+```json
+{
+  "content": [
+    {
+      "id": 1,
+      "firstName": "Elissandro",
+      "lastName": "Aparecido Anastacio",
+      "email": "elissandro@gmail.com",
+      "phone": "41-995628454",
+      "roles": [
+        {
+          "id": 1,
+          "authority": "ROLE_USER"
+        },
+        {
+          "id": 2,
+          "authority": "ROLE_ADMIN"
+        }
+      ]
+    }
+  ],
+  "pageable": {
+    "pageNumber": 0,
+    "pageSize": 20,
+    "sort": {
+      "empty": true,
+      "unsorted": true,
+      "sorted": false
+    },
+    "offset": 0,
+    "unpaged": false,
+    "paged": true
+  },
+  "totalPages": 1,
+  "totalElements": 1,
+  "last": true,
+  "size": 20,
+  "number": 0,
+  "sort": {
+    "empty": true,
+    "unsorted": true,
+    "sorted": false
+  },
+  "first": true,
+  "numberOfElements": 1,
+  "empty": false
+}
+```
 
-1. **Apenas inicie o Frontend**
-   - O aplicativo detectará que a API não está disponível
-   - Você verá uma notificação "Modo Offline" e um badge amarelo no header
-   - Todos os dados serão salvos no localStorage do navegador
-   - A aplicação funciona perfeitamente sem o backend
+#### Buscar Usuário por ID
+```
+GET /users/{id}
+Authorization: Bearer {token}
+```
+
+#### Criar Usuário
+```
+POST /users
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "firstName": "João",
+  "lastName": "Silva",
+  "email": "joao@example.com",
+  "phone": "41-999999999",
+  "Password": "senha123",
+  "roles": [
+    { "id": 1 }
+  ]
+}
+```
+
+**Notas:**
+- A API usa `Password` com P maiúsculo no campo de senha
+- O campo `phone` é opcional
+
+#### Atualizar Usuário
+```
+PUT /users/{id}
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "id": 1,
+  "firstName": "João",
+  "lastName": "Silva",
+  "email": "joao@example.com",
+  "phone": "41-999999999",
+  "Password": "novaSenha123",
+  "roles": [
+    { "id": 1 }
+  ]
+}
+```
+
+**Notas:**
+- O campo `Password` é **opcional** no update. **Não envie o campo** se não quiser alterar a senha
+- Se enviar `Password: null` ou `Password: ""`, a API retornará erro
+- O campo `phone` é opcional. Não envie se estiver vazio
+- O frontend automaticamente remove campos vazios antes de enviar
+
+**⚠️ Importante:**
+```javascript
+// ✅ CORRETO - Update sem alterar senha
+{
+  "id": 1,
+  "firstName": "João",
+  "lastName": "Silva",
+  "email": "joao@example.com",
+  "roles": [{ "id": 1 }]
+  // Password não incluído
+}
+
+// ❌ ERRADO - Gera erro "rawPassword cannot be null"
+{
+  "id": 1,
+  "firstName": "João",
+  "lastName": "Silva",
+  "email": "joao@example.com",
+  "Password": null,  // Não envie!
+  "roles": [{ "id": 1 }]
+}
+```
+
+#### Deletar Usuário
+```
+DELETE /users/{id}
+Authorization: Bearer {token}
+```
+
+### Roles
+
+#### Listar Roles
+```
+GET /roles
+Authorization: Bearer {token}
+```
+
+**Resposta:**
+```json
+[
+  {
+    "id": 1,
+    "authority": "ROLE_ADMIN"
+  },
+  {
+    "id": 2,
+    "authority": "ROLE_USER"
+  }
+]
+```
+
+## Mapeamento de Dados
+
+### TransactionType
+
+**API → Frontend:**
+- `INCOME` → `'income'` (Receita)
+- `EXPENSE` → `'expense'` (Despesa)
+
+**Frontend → API:**
+- `'income'` → `'INCOME'`
+- `'expense'` → `'EXPENSE'`
+
+### Conversão de Tipos
+
+#### Transaction
+
+**API:**
+```typescript
+interface ApiTransaction {
+  id: number;
+  amount: number;
+  description: string;
+  date: string;
+  transactionType: 'INCOME' | 'EXPENSE';
+  memberId: number;
+  member?: {
+    id: number;
+    name: string;
+    role: string;
+  };
+  category: {
+    id: number;
+    name?: string;
+  };
+}
+```
+
+**Frontend:**
+```typescript
+interface Transaction {
+  id: string;
+  amount: number;
+  description: string;
+  date: string;
+  type: 'income' | 'expense';
+  category: string;
+  memberId: string;
+  memberName?: string;
+}
+```
+
+#### Member
+
+**API:**
+```typescript
+interface ApiMember {
+  id: number;
+  name: string;
+  role: string;
+}
+```
+
+**Frontend:**
+```typescript
+interface Member {
+  id: string;
+  name: string;
+  role: string;
+}
+```
+
+## Uso no Código
+
+### Importação
+
+```typescript
+// Para operações diretas com a API
+import { transactionsApi, membersApi, categoriesApi } from './api-service';
+
+// Para operações simplificadas (recomendado)
+import {
+  Transaction,
+  Member,
+  getTransactions,
+  getMembers,
+  saveTransaction,
+  updateTransaction,
+  deleteTransaction,
+  saveMember,
+  updateMember,
+  deleteMember,
+  EXPENSE_CATEGORIES,
+  INCOME_CATEGORIES
+} from './api-helpers';
+```
+
+### Exemplos
+
+#### Buscar Transações
+```typescript
+const transactions = await getTransactions();
+console.log(transactions); // Array de Transaction[]
+```
+
+#### Criar Transação
+```typescript
+const newTransaction = await saveTransaction({
+  amount: 100.00,
+  description: 'Salário',
+  date: '2024-01-15',
+  type: 'income',
+  category: 'Salário',
+  memberId: '1'
+});
+```
+
+#### Atualizar Transação
+```typescript
+await updateTransaction('1', {
+  amount: 150.00,
+  description: 'Salário atualizado',
+  date: '2024-01-15',
+  type: 'income',
+  category: 'Salário',
+  memberId: '1'
+});
+```
+
+#### Deletar Transação
+```typescript
+await deleteTransaction('1');
+```
+
+#### Gerenciar Membros
+```typescript
+// Listar
+const members = await getMembers();
+
+// Criar
+const newMember = await saveMember({
+  name: 'João Silva',
+  role: 'Pai'
+});
+
+// Atualizar
+await updateMember('1', {
+  name: 'João Silva Jr.',
+  role: 'Filho'
+});
+
+// Deletar
+await deleteMember('1');
+```
 
 ## Tratamento de Erros
 
-Todos os métodos da API incluem tratamento de erros:
-- Erros de rede são capturados e exibidos como toasts
-- Logs de erro são enviados para o console
-- A aplicação continua funcional mesmo se algumas chamadas falharem
+### Erros Comuns
 
-## CORS
+#### 401 Unauthorized
+**Causa**: Token expirado ou inválido
+**Solução**: Usuário é redirecionado automaticamente para o login
 
-Certifique-se de que o backend está configurado para aceitar requisições do frontend:
+#### 404 Not Found
+**Causa**: Recurso não encontrado
+**Solução**: Mensagem de erro via toast
+
+#### 500 Internal Server Error
+**Causa**: Erro no servidor
+**Solução**: Mensagem de erro via toast
+
+### Exemplo de Tratamento
+
+```typescript
+try {
+  const transactions = await getTransactions();
+  // Processar transações
+} catch (error) {
+  console.error('Erro ao buscar transações:', error);
+  toast.error('Erro ao carregar transações');
+}
+```
+
+## Paginação
+
+A API de transações retorna dados paginados. O `api-service.ts` automaticamente busca todas as páginas:
+
+```typescript
+export const transactionsApi = {
+  getAll: async (): Promise<ApiTransaction[]> => {
+    let allTransactions: ApiTransaction[] = [];
+    let currentPage = 0;
+    let hasMore = true;
+    
+    while (hasMore) {
+      const response = await fetch(
+        `${API_BASE_URL}/transactions?page=${currentPage}&size=100&sort=date,desc&sort=id,desc`,
+        { headers: getAuthHeaders() }
+      );
+      const pagedData = await handleResponse<PagedResponse<ApiTransaction>>(response);
+      
+      allTransactions = [...allTransactions, ...pagedData.content];
+      hasMore = !pagedData.last;
+      currentPage++;
+    }
+    
+    return allTransactions;
+  }
+};
+```
+
+## Ordenação
+
+As transações são ordenadas por:
+1. Data (mais recentes primeiro)
+2. ID (maiores primeiro)
+
+```
+sort=date,desc&sort=id,desc
+```
+
+## Configuração CORS
+
+O backend Spring Boot deve ter CORS configurado para aceitar requisições do frontend:
 
 ```java
 @Configuration
-public class CorsConfig {
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
-                    .allowedOrigins("http://localhost:*", "http://127.0.0.1:*")
-                    .allowedMethods("GET", "POST", "PUT", "DELETE")
-                    .allowedHeaders("*");
-            }
-        };
+public class CorsConfig implements WebMvcConfigurer {
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:5173") // Vite dev server
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 }
 ```
 
-## Categorias
+## Checklist de Integração
 
-O sistema gerencia categorias automaticamente:
-- Quando uma transação é criada com uma categoria nova, ela é automaticamente criada na API
-- As categorias são mantidas em cache local para melhorar a performance
-- As listas estáticas `EXPENSE_CATEGORIES` e `INCOME_CATEGORIES` ainda existem para compatibilidade
+### Backend (Spring Boot)
+- [ ] API rodando em `http://localhost:8080`
+- [ ] Endpoints REST implementados
+- [ ] OAuth2 configurado com password grant
+- [ ] CORS configurado para `http://localhost:5173`
+- [ ] JWT configurado (duração 86400s = 24h)
+- [ ] Client ID: `myclientid`
+- [ ] Client Secret: `myclientsecret`
 
-## Desenvolvimento
-
-### Testando a API
-
-Você pode testar os endpoints usando:
-- Postman (import o JSON fornecido)
-- curl
-- Qualquer cliente HTTP
-
-### Exemplo com curl:
-
-```bash
-# Listar membros
-curl http://localhost:8080/members
-
-# Criar membro
-curl -X POST http://localhost:8080/members \
-  -H "Content-Type: application/json" \
-  -d '{"name":"João Silva","role":"Pai"}'
-
-# Listar transações
-curl http://localhost:8080/transactions
-
-# Criar transação
-curl -X POST http://localhost:8080/transactions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "amount": 150.00,
-    "description": "Conta de luz",
-    "date": "2024-10-28",
-    "transactionType": 1,
-    "memberId": 1,
-    "category": {"id": 3}
-  }'
-```
-
-## Detecção Automática de Modo
-
-O aplicativo automaticamente:
-1. Tenta conectar à API ao iniciar
-2. Define o modo baseado na disponibilidade (timeout de 2 segundos)
-3. Mostra uma notificação informando o modo ativo
-4. Exibe um badge no header (verde = Online, amarelo = Offline)
+### Frontend (React)
+- [ ] `auth-service.ts` configurado
+- [ ] `api-service.ts` com endpoints corretos
+- [ ] `api-helpers.ts` para conversão de tipos
+- [ ] Login screen funcionando
+- [ ] Tokens armazenados em sessionStorage
+- [ ] Headers de autorização em todas as requisições
 
 ## Troubleshooting
 
-### "Failed to fetch" ou Modo Offline inesperado
+### Erro: "Failed to fetch"
+**Causas:**
+- Backend não está rodando
+- CORS não configurado
+- Firewall bloqueando
 
-**Solução 1**: Inicie o Backend
-```bash
-# Certifique-se que o Spring Boot está rodando
-./mvnw spring-boot:run
+**Soluções:**
+- Verificar se backend está em `http://localhost:8080`
+- Configurar CORS no Spring Boot
+- Desabilitar firewall/antivírus temporariamente
+
+### Erro: 401 Unauthorized
+**Causas:**
+- Token expirado
+- Token inválido
+- Credenciais incorretas
+
+**Soluções:**
+- Fazer login novamente
+- Verificar configurações OAuth2 no backend
+- Verificar client_id e client_secret
+
+### Erro: 404 Not Found
+**Causas:**
+- Endpoint não existe no backend
+- URL incorreta
+
+**Soluções:**
+- Verificar implementação dos endpoints no backend
+- Verificar URL base em `api-service.ts`
+
+## Dependências
+
+### Frontend
+- React 18+
+- TypeScript
+- Fetch API (nativo)
+
+### Backend
+- Spring Boot 2.x ou 3.x
+- Spring Security OAuth2
+- Spring Data JPA
+- Banco de dados (PostgreSQL/MySQL/H2)
+
+## Performance
+
+### Otimizações Implementadas
+
+- ✅ Paginação automática (100 itens por página)
+- ✅ Cache de token em memória
+- ✅ Conversão de tipos lazy
+- ✅ Requisições paralelas com Promise.all
+
+### Recomendações
+
+- 📊 Implementar cache de dados no frontend
+- 🔄 Implementar refresh token automático
+- ⚡ Usar React Query para gerenciamento de estado
+- 📱 Implementar service worker para offline
+
+## Monitoramento
+
+### Logs
+
+O sistema registra logs detalhados no console:
+
+```
+🔐 [Auth] Iniciando login...
+✅ [Auth] Login realizado com sucesso
+📊 [Dashboard] Carregando dados...
+📊 [Dashboard] Dados carregados: { transactions: 50, members: 4 }
 ```
 
-**Solução 2**: Continue no Modo Offline
-- O aplicativo funciona perfeitamente sem o backend
-- Todos os dados ficam salvos no navegador
-- Para migrar para o backend depois, use a interface para recriar os dados
+### DevTools
 
-### Erro de CORS
-Se o backend está rodando mas ainda há erros, configure CORS:
+Use o DevTools do navegador para:
+- **Network**: Verificar requisições HTTP
+- **Console**: Ver logs da aplicação
+- **Application > Session Storage**: Ver tokens armazenados
 
-```java
-@Configuration
-public class CorsConfig {
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
-                    .allowedOrigins("*")
-                    .allowedMethods("GET", "POST", "PUT", "DELETE")
-                    .allowedHeaders("*");
-            }
-        };
-    }
-}
-```
+## Segurança
 
-### Dados não aparecem
-- **Modo Offline**: Dados estão no localStorage do navegador
-- **Modo Online**: Verifique se há dados no banco de dados do backend
-- Use as ferramentas de desenvolvedor (F12 > Network) para inspecionar requisições
+### Implementado
+- ✅ OAuth2 com JWT
+- ✅ HTTPS recomendado em produção
+- ✅ SessionStorage (tokens limpos ao fechar navegador)
+- ✅ Verificação de expiração de token
+- ✅ Authorization header em todas as requisições
 
-## Migração de Dados
+### Recomendações
+- 🔒 Usar HTTPS em produção
+- 🔑 Implementar refresh token
+- 🚫 Configurar rate limiting no backend
+- 🛡️ Implementar CSP (Content Security Policy)
+- 📝 Logging de auditoria no backend
 
-### Do localStorage para API
-1. Exporte os dados manualmente (copie do localStorage)
-2. Inicie o backend
-3. Recarregue a página (entrará em Modo Online)
-4. Recrie os dados pela interface
+## Contato e Suporte
 
-### Da API para localStorage
-- Não é necessário, o fallback é automático
-- Se a API falhar, o app usa dados locais automaticamente
-
-## Próximos Passos
-
-- [ ] Implementar autenticação JWT
-- [ ] Adicionar paginação nas listagens
-- [ ] Implementar filtros avançados no backend
-- [ ] Adicionar cache mais robusto
-- [ ] Implementar sincronização offline
+Para problemas de integração:
+1. Verifique os logs do console
+2. Verifique os logs do backend Spring Boot
+3. Teste os endpoints com Postman/curl
+4. Consulte a documentação do Spring Security OAuth2

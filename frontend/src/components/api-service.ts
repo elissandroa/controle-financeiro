@@ -1,4 +1,11 @@
-const API_BASE_URL = 'http://localhost:8080';
+// Configuração da URL base da API
+// Em desenvolvimento: usa localhost
+// Em produção: usa variável de ambiente VITE_API_BASE_URL
+const API_BASE_URL = 
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) || 
+  'http://localhost:8080';
+
+import { getAuthHeaders } from './auth-service';
 
 // Tipos da API
 export interface ApiCategory {
@@ -67,7 +74,13 @@ export interface ApiUser {
   firstName: string;
   lastName: string;
   email: string;
-  roles: Array<{ id: number }>;
+  phone?: string;
+  roles: Array<{ id: number; authority?: string }>;
+}
+
+export interface ApiRole {
+  id: number;
+  authority: string;
 }
 
 // Estado da API
@@ -121,14 +134,16 @@ async function handleResponse<T>(response: Response): Promise<T> {
 // Categories API
 export const categoriesApi = {
   getAll: async (): Promise<ApiCategory[]> => {
-    const response = await fetch(`${API_BASE_URL}/categories`);
+    const response = await fetch(`${API_BASE_URL}/categories`, {
+      headers: getAuthHeaders(),
+    });
     return handleResponse<ApiCategory[]>(response);
   },
 
   create: async (name: string): Promise<ApiCategory> => {
     const response = await fetch(`${API_BASE_URL}/categories`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ name }),
     });
     return handleResponse<ApiCategory>(response);
@@ -137,7 +152,7 @@ export const categoriesApi = {
   update: async (id: number, name: string): Promise<ApiCategory> => {
     const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ id, name }),
     });
     return handleResponse<ApiCategory>(response);
@@ -146,6 +161,7 @@ export const categoriesApi = {
   delete: async (id: number): Promise<void> => {
     const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
       method: 'DELETE',
+      headers: getAuthHeaders(),
     });
     return handleResponse<void>(response);
   },
@@ -154,14 +170,16 @@ export const categoriesApi = {
 // Members API
 export const membersApi = {
   getAll: async (): Promise<ApiMember[]> => {
-    const response = await fetch(`${API_BASE_URL}/members`);
+    const response = await fetch(`${API_BASE_URL}/members`, {
+      headers: getAuthHeaders(),
+    });
     return handleResponse<ApiMember[]>(response);
   },
 
   create: async (name: string, role: string): Promise<ApiMember> => {
     const response = await fetch(`${API_BASE_URL}/members`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ name, role }),
     });
     return handleResponse<ApiMember>(response);
@@ -170,7 +188,7 @@ export const membersApi = {
   update: async (id: number, name: string, role: string): Promise<ApiMember> => {
     const response = await fetch(`${API_BASE_URL}/members/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ name, role }),
     });
     return handleResponse<ApiMember>(response);
@@ -179,6 +197,7 @@ export const membersApi = {
   delete: async (id: number): Promise<void> => {
     const response = await fetch(`${API_BASE_URL}/members/${id}`, {
       method: 'DELETE',
+      headers: getAuthHeaders(),
     });
     return handleResponse<void>(response);
   },
@@ -194,7 +213,10 @@ export const transactionsApi = {
     
     while (hasMore) {
       const response = await fetch(
-        `${API_BASE_URL}/transactions?page=${currentPage}&size=100&sort=date,desc&sort=id,desc`
+        `${API_BASE_URL}/transactions?page=${currentPage}&size=100&sort=date,desc&sort=id,desc`,
+        {
+          headers: getAuthHeaders(),
+        }
       );
       const pagedData = await handleResponse<PagedResponse<ApiTransaction>>(response);
       
@@ -202,21 +224,15 @@ export const transactionsApi = {
       
       hasMore = !pagedData.last;
       currentPage++;
-      
-      console.log(`📊 Transactions API - Página ${currentPage}:`, {
-        totalElements: pagedData.totalElements,
-        totalPages: pagedData.totalPages,
-        contentLength: pagedData.content.length,
-        carregadas: allTransactions.length,
-        ordenacao: 'date,desc;id,desc (mais recentes primeiro)'
-      });
     }
     
     return allTransactions;
   },
 
   getById: async (id: number): Promise<ApiTransaction> => {
-    const response = await fetch(`${API_BASE_URL}/transactions/${id}`);
+    const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
+      headers: getAuthHeaders(),
+    });
     return handleResponse<ApiTransaction>(response);
   },
 
@@ -230,7 +246,7 @@ export const transactionsApi = {
   }): Promise<ApiTransaction> => {
     const response = await fetch(`${API_BASE_URL}/transactions`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({
         amount: transaction.amount,
         description: transaction.description,
@@ -253,7 +269,7 @@ export const transactionsApi = {
   }): Promise<ApiTransaction> => {
     const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({
         id,
         amount: transaction.amount,
@@ -270,20 +286,25 @@ export const transactionsApi = {
   delete: async (id: number): Promise<void> => {
     const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
       method: 'DELETE',
+      headers: getAuthHeaders(),
     });
     return handleResponse<void>(response);
   },
 };
 
-// Users API (se precisar no futuro)
+// Users API
 export const usersApi = {
-  getAll: async (): Promise<ApiUser[]> => {
-    const response = await fetch(`${API_BASE_URL}/users`);
-    return handleResponse<ApiUser[]>(response);
+  getAll: async (): Promise<PagedResponse<ApiUser>> => {
+    const response = await fetch(`${API_BASE_URL}/users`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<PagedResponse<ApiUser>>(response);
   },
 
   getById: async (id: number): Promise<ApiUser> => {
-    const response = await fetch(`${API_BASE_URL}/users/${id}`);
+    const response = await fetch(`${API_BASE_URL}/users/${id}`, {
+      headers: getAuthHeaders(),
+    });
     return handleResponse<ApiUser>(response);
   },
 
@@ -291,19 +312,61 @@ export const usersApi = {
     firstName: string;
     lastName: string;
     email: string;
+    phone?: string;
     password: string;
     roles: Array<{ id: number }>;
   }): Promise<ApiUser> => {
+    const body: any = {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      password: user.password, 
+      roles: user.roles,
+    };
+    
+    // Só inclui phone se foi fornecido
+    if (user.phone && user.phone.trim() !== '') {
+      body.phone = user.phone;
+    }
+    
     const response = await fetch(`${API_BASE_URL}/users`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        Password: user.password, // Nota: API usa "Password" com P maiúsculo
-        roles: user.roles,
-      }),
+      headers: getAuthHeaders(),
+      body: JSON.stringify(body),
+    });
+    return handleResponse<ApiUser>(response);
+  },
+
+  update: async (id: number, user: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    password?: string;
+    roles: Array<{ id: number }>;
+  }): Promise<ApiUser> => {
+    const body: any = {
+      id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      roles: user.roles,
+    };
+    
+    // Só inclui phone se foi fornecido
+    if (user.phone && user.phone.trim() !== '') {
+      body.phone = user.phone;
+    }
+    
+    // Só inclui password se foi fornecida
+    if (user.password && user.password.trim() !== '') {
+      body.Password = user.password;
+    }
+    
+    const response = await fetch(`${API_BASE_URL}/users/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(body),
     });
     return handleResponse<ApiUser>(response);
   },
@@ -311,7 +374,56 @@ export const usersApi = {
   delete: async (id: number): Promise<void> => {
     const response = await fetch(`${API_BASE_URL}/users/${id}`, {
       method: 'DELETE',
+      headers: getAuthHeaders(),
     });
     return handleResponse<void>(response);
+  },
+};
+
+// Roles API
+export const rolesApi = {
+  getAll: async (): Promise<ApiRole[]> => {
+    const response = await fetch(`${API_BASE_URL}/roles`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<ApiRole[]>(response);
+  },
+};
+
+// Password Recovery API
+// IMPORTANTE: Este módulo NÃO valida tokens.
+// Apenas envia requisições para o backend.
+// O backend é responsável por validar tokens (validade, expiração, uso único).
+export const passwordRecoveryApi = {
+  // Solicitar recuperação de senha
+  // Backend: valida email, gera token, envia email
+  // IMPORTANTE: subject e body podem ser customizados aqui se necessário
+  requestRecovery: async (email: string): Promise<{ message: string }> => {
+    const response = await fetch(`${API_BASE_URL}/auth/recover-token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        to: email, // Email do usuário
+        subject: 'Recuperação de Senha', // Assunto do email (customizável)
+        body: 'Recuperação de Senha você tem 30 minutos para utilizar o token contido nesse email:' // Corpo (customizável)
+      }),
+    });
+    return handleResponse<{ message: string }>(response);
+  },
+
+  // Resetar senha com token
+  // Backend: valida token, valida senha, altera senha, invalida token
+  // Frontend: apenas envia, não valida
+  resetPassword: async (token: string, newPassword: string): Promise<{ message: string }> => {
+    const response = await fetch(`${API_BASE_URL}/auth/new-password`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token, newPassword }), // Corrigido: newPassword ao invés de password
+    });
+    return handleResponse<{ message: string }>(response);
   },
 };

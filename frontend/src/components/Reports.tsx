@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from './ui/select';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Transaction, Member, getTransactions, getMembers } from './data-service';
+import { Transaction, Member, getTransactions, getMembers } from './api-helpers';
 import { TrendingUp, TrendingDown, RefreshCw } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -24,20 +24,13 @@ export default function Reports({ hideValues }: ReportsProps) {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      console.log('📈 [Reports] Carregando dados...');
       const [transactionsData, membersData] = await Promise.all([
         getTransactions(),
         getMembers()
       ]);
-      console.log('📈 [Reports] Dados carregados:', {
-        transactions: transactionsData.length,
-        members: membersData.length
-      });
-      console.log('📈 [Reports] Primeira transação:', transactionsData[0]);
       setTransactions(transactionsData || []);
       setMembers(membersData || []);
     } catch (error) {
-      console.error('❌ [Reports] Erro ao carregar dados:', error);
       setTransactions([]);
       setMembers([]);
     } finally {
@@ -56,7 +49,6 @@ export default function Reports({ hideValues }: ReportsProps) {
   // Filter transactions
   const filteredTransactions = transactions.filter((t) => {
     if (!t || !t.date) {
-      console.warn('⚠️ [Reports] Transação inválida:', t);
       return false;
     }
     
@@ -71,14 +63,6 @@ export default function Reports({ hideValues }: ReportsProps) {
     
     const transactionDate = new Date(t.date);
     return transactionDate >= cutoffDate;
-  });
-
-  console.log('📈 [Reports] Transações filtradas:', {
-    total: transactions.length,
-    filtradas: filteredTransactions.length,
-    periodo: selectedPeriod,
-    periodoTipo: selectedPeriod === 'all' ? 'Todo período' : `${selectedPeriod} meses`,
-    membro: selectedMember
   });
 
   // Calcula totais uma única vez para reuso
@@ -166,10 +150,8 @@ export default function Reports({ hideValues }: ReportsProps) {
       Saldo: income - expenses,
     });
   }
-  
-  console.log('📈 [Reports] Dados mensais:', monthlyData);
 
-  // Category data
+  // Category data - Expenses
   const categoryMap: { [key: string]: number } = {};
   filteredTransactions
     .filter((t) => t && t.type === 'expense' && t.category)
@@ -183,10 +165,29 @@ export default function Reports({ hideValues }: ReportsProps) {
     .map(([name, value]) => ({
       name,
       value,
+      percentage: totalExpenses > 0 ? (value / totalExpenses) * 100 : 0,
     }))
-    .filter(item => item.value > 0);
+    .filter(item => item.value > 0)
+    .sort((a, b) => b.value - a.value);
+
+  // Category data - Income
+  const incomeCategoryMap: { [key: string]: number } = {};
+  filteredTransactions
+    .filter((t) => t && t.type === 'income' && t.category)
+    .forEach((t) => {
+      const category = t.category || 'Outros';
+      const amount = Number(t.amount) || 0;
+      incomeCategoryMap[category] = (incomeCategoryMap[category] || 0) + amount;
+    });
   
-  console.log('📈 [Reports] Dados de categorias:', categoryData);
+  const incomeCategoryData = Object.entries(incomeCategoryMap)
+    .map(([name, value]) => ({
+      name,
+      value,
+      percentage: totalIncome > 0 ? (value / totalIncome) * 100 : 0,
+    }))
+    .filter(item => item.value > 0)
+    .sort((a, b) => b.value - a.value);
 
   const COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
@@ -213,8 +214,6 @@ export default function Reports({ hideValues }: ReportsProps) {
       };
     })
     .filter(item => item !== null);
-  
-  console.log('📈 [Reports] Desempenho por membro:', memberPerformance);
 
   return (
     <div className="space-y-6">
@@ -442,6 +441,99 @@ export default function Reports({ hideValues }: ReportsProps) {
             ) : (
               <p className="text-center text-muted-foreground py-12">
                 Nenhum membro cadastrado
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Values by Category */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Expense Categories Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Valores por Categoria - Despesas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {categoryData.length > 0 ? (
+              <div className="space-y-3">
+                {categoryData.map((category, index) => (
+                  <div
+                    key={category.name}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                      />
+                      <span className="font-medium">{category.name}</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-red-600">
+                        {formatCurrency(category.value)}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {hideValues ? '••%' : `${category.percentage.toFixed(1)}%`}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <div className="flex items-center justify-between p-3 bg-gray-100 rounded-lg border-t-2 border-gray-300 mt-4">
+                  <span className="font-bold">Total</span>
+                  <span className="text-red-600 font-bold">
+                    {formatCurrency(totalExpenses)}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-12">
+                Nenhuma despesa registrada
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Income Categories Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Valores por Categoria - Receitas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {incomeCategoryData.length > 0 ? (
+              <div className="space-y-3">
+                {incomeCategoryData.map((category, index) => (
+                  <div
+                    key={category.name}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                      />
+                      <span className="font-medium">{category.name}</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-green-600">
+                        {formatCurrency(category.value)}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {hideValues ? '••%' : `${category.percentage.toFixed(1)}%`}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <div className="flex items-center justify-between p-3 bg-gray-100 rounded-lg border-t-2 border-gray-300 mt-4">
+                  <span className="font-bold">Total</span>
+                  <span className="text-green-600 font-bold">
+                    {formatCurrency(totalIncome)}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-12">
+                Nenhuma receita registrada
               </p>
             )}
           </CardContent>

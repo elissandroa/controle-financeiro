@@ -6,7 +6,7 @@ import { Label } from './ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { UserPlus, Trash2, Edit } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
-import { Member, getMembers, saveMember, deleteMember, updateMember } from './data-service';
+import { Member, getMembers, saveMember, deleteMember, updateMember } from './api-helpers';
 
 export default function MembersManagement() {
   const [members, setMembers] = useState<Member[]>([]);

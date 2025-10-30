@@ -348,7 +348,6 @@ export async function deleteTransaction(id: string): Promise<void> {
 // ==================== CATEGORIAS ====================
 
 export const EXPENSE_CATEGORIES = [
-  'Abastecimento',
   'Alimentação',
   'Moradia',
   'Transporte',

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { TrendingUp, TrendingDown, Wallet, Users, Fuel, Receipt } from 'lucide-react';
-import { Transaction, Member, getTransactions, getMembers } from './data-service';
+import { TrendingUp, TrendingDown, Wallet, Users, Receipt } from 'lucide-react';
+import { Transaction, Member, getTransactions, getMembers } from './api-helpers';
 
 interface DashboardOverviewProps {
   hideValues: boolean;
@@ -17,20 +17,13 @@ export default function DashboardOverview({ hideValues }: DashboardOverviewProps
 
   const loadData = async () => {
     try {
-      console.log('📊 [Dashboard] Carregando dados...');
       const [transactionsData, membersData] = await Promise.all([
         getTransactions(),
         getMembers()
       ]);
-      console.log('📊 [Dashboard] Dados carregados:', {
-        transactions: transactionsData.length,
-        members: membersData.length,
-        primeira: transactionsData[0] ? { id: transactionsData[0].id, date: transactionsData[0].date } : null
-      });
       setTransactions(transactionsData || []);
       setMembers(membersData || []);
     } catch (error) {
-      console.error('❌ [Dashboard] Erro ao carregar dados:', error);
       setTransactions([]);
       setMembers([]);
     }
@@ -55,10 +48,6 @@ export default function DashboardOverview({ hideValues }: DashboardOverviewProps
 
   const balance = totalIncome - totalExpenses;
 
-  const fuelExpenses = monthlyTransactions
-    .filter((t) => t && t.category === 'Abastecimento')
-    .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-
   // As transações já vêm ordenadas (mais recentes primeiro)
   const recentTransactions = transactions.slice(0, 5);
 
@@ -72,7 +61,7 @@ export default function DashboardOverview({ hideValues }: DashboardOverviewProps
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm">Saldo do Mês</CardTitle>
@@ -111,17 +100,6 @@ export default function DashboardOverview({ hideValues }: DashboardOverviewProps
             <p className="text-xs text-muted-foreground mt-1">
               {monthlyTransactions.filter((t) => t.type === 'expense').length} transações
             </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm">Abastecimento</CardTitle>
-            <Fuel className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl">{formatCurrency(fuelExpenses)}</div>
-            <p className="text-xs text-muted-foreground mt-1">Este mês</p>
           </CardContent>
         </Card>
       </div>

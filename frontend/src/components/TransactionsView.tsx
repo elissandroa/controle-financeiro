@@ -19,7 +19,7 @@ import {
   deleteTransaction,
   EXPENSE_CATEGORIES,
   INCOME_CATEGORIES,
-} from './data-service';
+} from './api-helpers';
 
 export default function TransactionsView() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -49,14 +49,6 @@ export default function TransactionsView() {
         getTransactions(),
         getMembers()
       ]);
-      console.log('📋 [TransactionsView] Transações carregadas (ordenadas por ID desc):', {
-        total: transactionsData.length,
-        primeira: transactionsData[0] ? { id: transactionsData[0].id, date: transactionsData[0].date } : null,
-        ultima: transactionsData[transactionsData.length - 1] ? { 
-          id: transactionsData[transactionsData.length - 1].id, 
-          date: transactionsData[transactionsData.length - 1].date 
-        } : null
-      });
       setTransactions(transactionsData);
       setMembers(membersData);
       setCurrentPage(1);

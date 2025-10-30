@@ -2,9 +2,18 @@
   import { defineConfig } from 'vite';
   import react from '@vitejs/plugin-react-swc';
   import path from 'path';
+  import { viteStaticCopy } from 'vite-plugin-static-copy';
 
-  export default defineConfig({
-    plugins: [react()],
+  export default defineConfig({base: '/hdcontrol-java/',
+  plugins: [
+    react(),
+    // 🔧 Garante que o 404.html seja incluído no build final
+    viteStaticCopy({
+      targets: [
+        { src: 'public/404.html', dest: '.' },
+      ],
+    }),
+  ],
     resolve: {
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
       alias: {
@@ -51,7 +60,7 @@
     },
     build: {
       target: 'esnext',
-      outDir: 'build',
+      outDir: 'dist',
     },
     server: {
       port: 3000,
