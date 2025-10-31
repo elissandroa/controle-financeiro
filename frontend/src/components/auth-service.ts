@@ -1,6 +1,6 @@
 // Serviço de Autenticação OAuth2 para Spring Boot
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = 'https://controle-financeiro-proxy.vercel.app';
 
 export interface LoginCredentials {
   username: string;

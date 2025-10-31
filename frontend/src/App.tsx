@@ -19,7 +19,7 @@ export default function App() {
     console.log('[App] Pathname atual:', path);
     
     // Aceita uma ou mais barras após /recover-password (exemplo: /recover-password//token ou /recover-password/token)
-    const resetMatch = path.match(/\/recover-password\/+([a-f0-9-]+)/i);
+    const resetMatch = path.match(/(?:\/controle-financeiro)?\/recover-password\/([^/]+)/);
     
     if (resetMatch) {
       const token = resetMatch[1];

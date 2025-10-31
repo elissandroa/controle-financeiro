@@ -192,7 +192,7 @@ export default function DashboardOverview({ hideValues }: DashboardOverviewProps
                         <div>
                           <p className="text-sm">{transaction.description}</p>
                           <p className="text-xs text-muted-foreground">
-                            {member?.name} • {new Date(transaction.date).toLocaleDateString('pt-BR')}
+                            {member?.name} • {new Date(transaction.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}
                           </p>
                         </div>
                       </div>

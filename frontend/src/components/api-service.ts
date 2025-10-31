@@ -3,7 +3,7 @@
 // Em produção: usa variável de ambiente VITE_API_BASE_URL
 const API_BASE_URL = 
   (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) || 
-  'http://localhost:8080';
+  'https://controle-financeiro-proxy.vercel.app';
 
 import { getAuthHeaders } from './auth-service';
 

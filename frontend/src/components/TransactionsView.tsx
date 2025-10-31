@@ -177,7 +177,7 @@ export default function TransactionsView() {
   const groupedByMonth = paginatedTransactions.reduce((acc, transaction) => {
     const date = new Date(transaction.date);
     const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-    const monthName = date.toLocaleDateString('pt-BR', { year: 'numeric', month: 'long' });
+    const monthName = date.toLocaleDateString('pt-BR', { year: 'numeric', month: 'long' },);
     
     if (!acc[monthKey]) {
       acc[monthKey] = {
@@ -463,7 +463,7 @@ export default function TransactionsView() {
                                   </span>
                                   <span className="text-xs text-muted-foreground">•</span>
                                   <span className="text-xs text-muted-foreground">
-                                    {new Date(transaction.date).toLocaleDateString('pt-BR')}
+                                    {new Date(transaction.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}
                                   </span>
                                 </div>
                               </div>
