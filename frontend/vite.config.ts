@@ -9,7 +9,7 @@ import { defineConfig } from 'vite';
     // 🔧 Garante que o 404.html seja incluído no build final
     viteStaticCopy({
       targets: [
-        { src: '404.html', dest: '.' },
+        { src: 'public/404.html', dest: '.' },
       ],
     }),
   ],
