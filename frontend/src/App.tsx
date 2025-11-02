@@ -41,7 +41,7 @@ export default function App() {
   const handleLogin = () => {
     setIsAuthenticated(true);
     setCurrentScreen('dashboard');
-    window.history.pushState({}, '', '/');
+    window.history.pushState({}, '', '/controle-financeiro/');
   };
 
   const handleLogout = () => {
