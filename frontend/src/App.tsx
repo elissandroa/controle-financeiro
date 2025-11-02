@@ -47,19 +47,19 @@ export default function App() {
   const handleLogout = () => {
     setIsAuthenticated(false);
     setCurrentScreen('login');
-    window.history.pushState({}, '', '/');
+    window.history.pushState({}, '', '/controle-financeiro/');
   };
 
   const handleResetSuccess = () => {
     setCurrentScreen('login');
     setResetToken(null);
-    window.history.pushState({}, '', '/');
+    window.history.pushState({}, '', '/controle-financeiro/');
   };
 
   const handleResetCancel = () => {
     setCurrentScreen('login');
     setResetToken(null);
-    window.history.pushState({}, '', '/');
+    window.history.pushState({}, '', '/controle-financeiro/');
   };
 
   if (!isInitialized) {
