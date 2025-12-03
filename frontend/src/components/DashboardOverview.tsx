@@ -35,8 +35,10 @@ export default function DashboardOverview({ hideValues }: DashboardOverviewProps
   const monthlyTransactions = transactions.filter((t) => {
     if (!t || !t.date) return false;
     const date = new Date(t.date);
-    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+    return date.getUTCMonth() === currentMonth && date.getUTCFullYear() === currentYear;
   });
+
+  console.log("monthlyTransactions", monthlyTransactions);
 
   const totalIncome = monthlyTransactions
     .filter((t) => t && t.type === 'income')

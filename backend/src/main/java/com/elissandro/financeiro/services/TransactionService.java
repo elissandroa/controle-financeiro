@@ -1,5 +1,7 @@
 package com.elissandro.financeiro.services;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +44,9 @@ public class TransactionService {
 	public TransactionDTO insert(TransactionDTO dto) {
 		Transaction transaction = new Transaction();
 		transaction.setAmount(dto.getAmount());
-		transaction.setDate(dto.getDate());
+		transaction.setDate(dto.getDate() != null
+				? dto.getDate()
+				: OffsetDateTime.now(ZoneOffset.UTC).toLocalDate());
 		transaction.setTransactionType(dto.getTransactionType());
 		transaction.setDescription(dto.getDescription());
 		transaction.setMember(dto.getMemberId() != null

@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.Objects;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -21,6 +22,7 @@ public class Transaction implements Serializable {
 	private Long id;
 	private Double amount;
 	private String description;
+	@Column(columnDefinition = "TIMESTAMP WITH TIME ZONE")
 	private LocalDate date;
 	private TransactionType transactionType;
 	
