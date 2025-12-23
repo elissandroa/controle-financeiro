@@ -304,7 +304,7 @@ http://localhost:8080/recover-password/token
 
 # Token inválido (letras maiúsculas, caracteres especiais)
 http://localhost:3000/recover-password/ABC123-DEF456
-http://localhost:3000/recover-password/token@123
+http://localhost:3000/recover-password/token23
 
 # Path errado
 http://localhost:3000/reset-password/token

@@ -5,7 +5,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { UserPlus, Trash2, Edit, RefreshCw, Shield, AlertTriangle } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { usersApi, rolesApi, ApiUser, ApiRole } from './api-service';
 import { Checkbox } from './ui/checkbox';
 import { Badge } from './ui/badge';

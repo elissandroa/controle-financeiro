@@ -17,7 +17,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { passwordRecoveryApi } from './api-service';
 import { Lock, Loader2, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 

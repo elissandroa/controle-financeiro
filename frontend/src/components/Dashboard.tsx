@@ -8,7 +8,7 @@ import TransactionsView from './TransactionsView';
 import Reports from './Reports';
 import UsersManagement from './UsersManagement';
 import { logout, isAdmin } from './auth-service';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface DashboardProps {
   onLogout: () => void;
